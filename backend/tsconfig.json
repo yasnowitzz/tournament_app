@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+      "target": "es6",
+      "module": "commonjs",  // ✅ Keep "commonjs" to work with NestJS & TypeORM CLI
+      "moduleResolution": "node",  // ✅ Required for TypeORM to resolve paths
+      "outDir": "./dist",
+      "rootDir": "./src",
+      "strict": true,
+      "esModuleInterop": true,  // ✅ Allows using ES module syntax
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "experimentalDecorators": true,  // ✅ Required for TypeORM decorators
+      "emitDecoratorMetadata": true,  // ✅ Required for TypeORM decorators
+      "lib": ["es2017", "dom"]
+    },
+    "include": ["src"]
+  }
