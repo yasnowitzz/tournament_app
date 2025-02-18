@@ -11,8 +11,8 @@
         { "match_id": 8, "team1": "TBD", "team2": "TBD", "next_match_win": 10, "next_match_lose": null, "stage": "Loosers Round 1" },
         { "match_id": 9, "team1": "TBD", "team2": "TBD", "next_match_win": 11, "next_match_lose": null, "stage": "Loosers Round 2" },
         { "match_id": 10, "team1": "TBD", "team2": "TBD", "next_match_win": 12, "next_match_lose": null, "stage": "Loosers Round 2" },
-        { "match_id": 11, "team1": "TBD", "team2": "TBD", "next_match_win": 13, "next_match_lose": 14, "stage": "Semi Finals" },
-        { "match_id": 12, "team1": "TBD", "team2": "TBD", "next_match_win": 13, "next_match_lose": 14, "stage": "Semi Finals" },
+        { "match_id": 11, "team1": "TBD", "team2": "TBD", "next_match_win": 14, "next_match_lose": 13, "stage": "Semi Finals" },
+        { "match_id": 12, "team1": "TBD", "team2": "TBD", "next_match_win": 14, "next_match_lose": 13, "stage": "Semi Finals" },
         { "match_id": 13, "team1": "TBD", "team2": "TBD", "next_match_win": null, "next_match_lose": null, "stage": "3rd Place" },
         { "match_id": 14, "team1": "TBD", "team2": "TBD", "next_match_win": null, "next_match_lose": null, "stage": "Final" }
       ]
