@@ -5,6 +5,7 @@ import { Match } from './match.entity';
 import { Tournament } from '../tournament/tournament.entity';
 import { Team } from '../team/team.entity';
 import { SetService } from '../set/set.service';
+import { Set } from '../set/set.entity';
 import { BadRequestException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -19,6 +20,8 @@ export class MatchService {
     @InjectRepository(Team)
     private teamRepository: Repository<Team>,
     private readonly setService: SetService, // Correct injection
+    @InjectRepository(Set)
+    private setRepository: Repository<Set>,
   ) { }
 
   private loadMatchSchema(): any {
@@ -101,46 +104,46 @@ export class MatchService {
   async assignTeamsToSpecificMatch(tournamentId: number, matchId: number, team1Id: number, team2Id: number) {
     // Pobranie meczu
     const match = await this.matchRepository.findOne({
-        where: { id: matchId, tournament: { id: tournamentId } },
-        relations: ['tournament'],
+      where: { id: matchId, tournament: { id: tournamentId } },
+      relations: ['tournament'],
     });
 
     if (!match) {
-        throw new BadRequestException('Match not found');
+      throw new BadRequestException('Match not found');
     }
 
     // Sprawdzenie, czy drużyny są różne
     if (team1Id === team2Id) {
-        throw new BadRequestException("The same team cannot play against itself.");
+      throw new BadRequestException("The same team cannot play against itself.");
     }
 
     // Pobranie drużyn
     const team1 = await this.teamRepository.findOne({ where: { id: team1Id } });
     if (!team1) {
-        throw new BadRequestException(`Team with id ${team1Id} not found`);
+      throw new BadRequestException(`Team with id ${team1Id} not found`);
     }
 
     const team2 = await this.teamRepository.findOne({ where: { id: team2Id } });
     if (!team2) {
-        throw new BadRequestException(`Team with id ${team2Id} not found`);
+      throw new BadRequestException(`Team with id ${team2Id} not found`);
     }
 
     // Pobranie meczów w tej samej rundzie turnieju
     const sameStageMatches = await this.matchRepository.find({
-        where: { tournament: { id: tournamentId }, stage: match.stage },
-        relations: ['team1', 'team2'],
+      where: { tournament: { id: tournamentId }, stage: match.stage },
+      relations: ['team1', 'team2'],
     });
 
     // Sprawdzenie, czy drużyna już jest przypisana do innego meczu w tej samej rundzie
     for (const existingMatch of sameStageMatches) {
-        if (existingMatch.id !== matchId) { // Pomijamy obecny mecz
-            if (existingMatch.team1?.id === team1Id || existingMatch.team2?.id === team1Id) {
-                throw new BadRequestException(`Team ${team1Id} is already assigned in this round.`);
-            }
-            if (existingMatch.team1?.id === team2Id || existingMatch.team2?.id === team2Id) {
-                throw new BadRequestException(`Team ${team2Id} is already assigned in this round.`);
-            }
+      if (existingMatch.id !== matchId) { // Pomijamy obecny mecz
+        if (existingMatch.team1?.id === team1Id || existingMatch.team2?.id === team1Id) {
+          throw new BadRequestException(`Team ${team1Id} is already assigned in this round.`);
         }
+        if (existingMatch.team1?.id === team2Id || existingMatch.team2?.id === team2Id) {
+          throw new BadRequestException(`Team ${team2Id} is already assigned in this round.`);
+        }
+      }
     }
 
     // Przypisanie drużyn do meczu
@@ -149,7 +152,7 @@ export class MatchService {
 
     await this.matchRepository.save(match);
     return match;
-}
+  }
 
   async removeTeamsFromSpecificMatch(tournamentId: number, matchId: number) {
     const match = await this.matchRepository.findOne({
@@ -177,10 +180,16 @@ export class MatchService {
       throw new BadRequestException('Match not found');
     }
 
-    // Zapisujemy wyniki setów poprzez SetService
+    // Usuwamy istniejące sety
+    const deleteResult = await this.setRepository.delete({ match: { id: matchId } });
+    console.log(`Deleted sets:`, deleteResult);
+
+    // Usunięcie referencji do setów w obiekcie match, aby nie zawierał już usuniętych setów
+    match.sets = [];
+
+    // Zapisujemy nowe wyniki
     const sets = await this.setService.saveMatchSets(match, setResults);
 
-    // Obliczamy liczbę wygranych setów dla każdej drużyny
     let team1SetsWon = 0;
     let team2SetsWon = 0;
 
@@ -192,57 +201,108 @@ export class MatchService {
       }
     });
 
-    // Określamy zwycięzcę
     let winningTeamId: number | null = null;
     if (team1SetsWon > team2SetsWon) {
-      if (!match.team1) {
-        throw new BadRequestException('Team1 is not assigned to the match');
-      }
+      if (!match.team1) throw new BadRequestException('Team1 is not assigned to the match');
       winningTeamId = match.team1.id;
     } else if (team2SetsWon > team1SetsWon) {
-      if (!match.team2) {
-        throw new BadRequestException('Team2 is not assigned to the match');
-      }
+      if (!match.team2) throw new BadRequestException('Team2 is not assigned to the match');
       winningTeamId = match.team2.id;
     }
 
     if (!winningTeamId) {
-      throw new BadRequestException('Match is a draw, cannot proceed'); // W razie remisu (nie powinno się zdarzyć)
+      throw new BadRequestException('Match is a draw, cannot proceed');
     }
 
     match.winner = winningTeamId;
     await this.matchRepository.save(match);
 
-    // Automatyczne przypisanie drużyn do kolejnych meczów
+    // Automatyczna aktualizacja kolejnego meczu
+    await this.updateNextMatch(match.id, winningTeamId);
+  }
+
+  async updateNextMatch(matchId: number, winningTeamId: number) {
+    const match = await this.matchRepository.findOne({
+      where: { id: matchId },
+      relations: ['team1', 'team2', 'tournament'],
+    });
+
+    if (!match) {
+      throw new BadRequestException('Match not found');
+    }
+    console.log(`Match to be updated` , match);
+    const losingTeamId = match.team1?.id === winningTeamId ? match.team2?.id : match.team1?.id;
+
+    console.log(`Winning team: ${winningTeamId}, Losing team: ${losingTeamId}`);
+    // 🛑 Usuwamy stare przypisania z następnych meczów, jeśli zmienił się zwycięzca
+    await this.clearNextMatchAssignment(match.next_match_win, losingTeamId, match.tournament.id );
+    await this.clearNextMatchAssignment(match.next_match_lose, winningTeamId, match.tournament.id );
+
+    // 📌 Obsługa meczu dla zwycięzcy
     if (match.next_match_win) {
-      const nextMatchWin = await this.matchRepository.findOne({ where: { id: match.next_match_win } });
+      const nextMatchWin = await this.matchRepository.findOne({
+        where: { match_id: match.next_match_win, tournament: { id: match.tournament.id } },
+        relations: ['team1', 'team2', 'tournament'],
+      });
+
       if (nextMatchWin) {
-        nextMatchWin.team1 = nextMatchWin.team1 ?? await this.teamRepository.findOneOrFail({ where: { id: winningTeamId } });
+        const teamToAssign = await this.teamRepository.findOneOrFail({ where: { id: winningTeamId } });
+
+        if (!nextMatchWin.team1) {
+          nextMatchWin.team1 = teamToAssign;
+        } else if (!nextMatchWin.team2) {
+          nextMatchWin.team2 = teamToAssign;
+        } else {
+          console.warn(`Next match ${match.next_match_win} already has both teams assigned.`);
+        }
+
         await this.matchRepository.save(nextMatchWin);
       }
     }
 
-    if (match.next_match_lose) {
-      if (!match.team1 || !match.team2) {
-        throw new BadRequestException('One of the teams is not assigned to the match');
-      }
-      const losingTeamId = match.team1.id === winningTeamId ? match.team2.id : match.team1.id;
-      if (losingTeamId) {
-        const nextMatchLose = await this.matchRepository.findOne({ where: { id: match.next_match_lose } });
-        if (nextMatchLose) {
-          nextMatchLose.team1 = nextMatchLose.team1 ?? await this.teamRepository.findOneOrFail({ where: { id: losingTeamId } });
-          await this.matchRepository.save(nextMatchLose);
+    // 📌 Obsługa meczu dla przegranego
+    if (match.next_match_lose && losingTeamId) {
+      const nextMatchLose = await this.matchRepository.findOne({
+        where: { match_id: match.next_match_lose, tournament: { id: match.tournament.id } },
+        relations: ['team1', 'team2'],
+      });
+
+      if (nextMatchLose) {
+        const teamToAssign = await this.teamRepository.findOneOrFail({ where: { id: losingTeamId } });
+
+        if (!nextMatchLose.team1) {
+          nextMatchLose.team1 = teamToAssign;
+        } else if (!nextMatchLose.team2) {
+          nextMatchLose.team2 = teamToAssign;
+        } else {
+          console.warn(`Next match ${match.next_match_lose} already has both teams assigned.`);
         }
+
+        await this.matchRepository.save(nextMatchLose);
       }
     }
+  }
 
-    return {
-      message: `Match ${matchId} updated successfully`,
-      winner: winningTeamId,
-      team1SetsWon,
-      team2SetsWon,
-      sets
-    };
+  /**
+  * 🛑 Funkcja usuwa stare przypisanie drużyn, jeśli zmienia się zwycięzca lub przegrany.
+  */
+  async clearNextMatchAssignment(nextMatchId: number | null, teamId: number | undefined, tournamentId: number) {
+    if (!nextMatchId || !teamId) return;
+
+    const nextMatch = await this.matchRepository.findOne({
+      where: { match_id: nextMatchId, tournament: { id: tournamentId } },
+      relations: ['team1', 'team2'],
+    });
+
+    if (nextMatch) {
+      if (nextMatch.team1?.id === teamId) {
+        nextMatch.team1 = null;
+      } else if (nextMatch.team2?.id === teamId) {
+        nextMatch.team2 = null;
+      }
+
+      await this.matchRepository.save(nextMatch);
+    }
   }
 
   async getMatchesByTournament(tournamentId: number) {

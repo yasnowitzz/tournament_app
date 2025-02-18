@@ -17,6 +17,7 @@ const TournamentDetails = () => {
   const [isMatchModalOpen, setIsMatchModalOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [activeTab, setActiveTab] = useState("matches"); // Domyślnie pierwsza zakładka
+  const [results, setResults] = useState({});
 
   useEffect(() => {
     if (!isNaN(tournamentId)) {
@@ -29,12 +30,35 @@ const TournamentDetails = () => {
         fetchMatches();
       }
     }
-  }, [tournamentId]);
+  }, [tournamentId, activeTab]);
 
-  const fetchMatches = () => {
-    fetcher(`/matches/tournament/${tournamentId}`)
-      .then((data) => setMatches(data))
-      .catch((error) => console.error("Błąd ładowania meczów:", error));
+  const fetchMatches = async () => {
+    try {
+      const data = await fetcher(`/matches/tournament/${tournamentId}`);
+      setMatches(data);
+
+      // Pobierz wyniki dla każdego meczu
+      const resultsData = await Promise.all(
+        data.map(async (match) => {
+          try {
+            const result = await fetcher(`/matches/${match.id}/result`);
+            return { matchId: match.id, result };
+          } catch (error) {
+            console.error(`Błąd ładowania wyniku meczu ${match.id}:`, error);
+            return { matchId: match.id, result: null };
+          }
+        })
+      );
+
+      const resultsMap = resultsData.reduce((acc, curr) => {
+        acc[curr.matchId] = curr.result;
+        return acc;
+      }, {});
+
+      setResults(resultsMap);
+    } catch (error) {
+      console.error("Błąd ładowania meczów:", error);
+    }
   };
 
   const fetchTeams = () => {
@@ -60,6 +84,22 @@ const TournamentDetails = () => {
       acc[stage].push(match);
       return acc;
     }, {});
+  };
+
+  const handleResultChange = (matchId, team, value) => {
+    setResults((prev) => ({
+      ...prev,
+      [matchId]: {
+        ...prev[matchId],
+        [team]: value,
+      },
+    }));
+  };
+
+  const handleSaveResult = (match) => {
+    if (results[match.id]?.team1 !== undefined && results[match.id]?.team2 !== undefined) {
+      updateMatchResult(match.id, results[match.id].team1, results[match.id].team2);
+    }
   };
 
   const groupedMatches = groupAndSortMatches(matches);
@@ -119,13 +159,23 @@ const TournamentDetails = () => {
                       <div className="flex min-w-0 gap-x-4">
                         <div className="min-w-0 flex-auto">
                           <p className="text-sm font-semibold text-gray-900">
-                            {match.team1 ? match.team1.id : "TBD"} vs {match.team2 ? match.team2.id : "TBD"}
+                            {match.team1
+                              ? `${match.team1.player1.lastName} / ${match.team1.player2.lastName}`
+                              : "TBD"} vs{" "}
+                            {match.team2
+                              ? `${match.team2.player1.lastName} / ${match.team2.player2.lastName}`
+                              : "TBD"}
                           </p>
                           <p className="mt-1 text-xs text-gray-500">{match.matchTime || "Godzina nieznana"}</p>
                         </div>
                       </div>
                       <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
                         <p className="text-sm text-gray-900">Boisko: {match.court || "N/A"}</p>
+                        <p className="text-sm font-medium text-blue-600">
+                          {results[match.id] && results[match.id].team1_score !== undefined && results[match.id].team2_score !== undefined
+                            ? `${results[match.id].team1_score} - ${results[match.id].team2_score}`
+                            : "Brak wyniku"}
+                        </p>
                       </div>
                     </li>
                   ))}
@@ -146,8 +196,7 @@ const TournamentDetails = () => {
                   <li key={team.id} className="py-3">
                     <p className="text-gray-800 font-medium">Drużyna #{team.id}</p>
                     <p className="text-sm text-gray-600">
-                      {team.player1.firstName} {team.player1.lastName} &
-                      {team.player2.firstName} {team.player2.lastName}
+                      {team.player1.lastName} & {team.player2.lastName}
                     </p>
                   </li>
                 ))

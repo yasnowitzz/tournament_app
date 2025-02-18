@@ -18,6 +18,16 @@ const MatchModal = ({ open, onClose, match, tournamentId }) => {
   const router = useRouter();
   const dropdown1Ref = useRef(null);
   const dropdown2Ref = useRef(null);
+  const [matchResult, setMatchResult] = useState("");
+  const [activeTab, setActiveTab] = useState("teams"); // Dodana zakładka
+  const [setScore, setSetScore] = useState({ team1: 0, team2: 0 });
+  const [setDetails, setSetDetails] = useState([
+    { team1: null, team2: null },
+    { team1: null, team2: null },
+    { team1: null, team2: null },
+  ]);
+
+
 
   useEffect(() => {
     fetcher(`/teams/tournament/${tournamentId}`)
@@ -33,22 +43,22 @@ const MatchModal = ({ open, onClose, match, tournamentId }) => {
 
   useEffect(() => {
     if (!open) return; // Pobieramy drużyny tylko gdy modal jest otwarty
-  
+
     const fetchTeams = async () => {
       try {
         console.log("Pobieranie drużyn i meczów...");
         const allTeams = await fetcher(`/teams/tournament/${tournamentId}`);
         const matches = await fetcher(`/matches/tournament/${tournamentId}`);
-  
+
         // Wyciągnij ID drużyn, które są już przypisane do jakiegokolwiek meczu
         const assignedTeamIds = new Set();
         matches.forEach(match => {
           if (match.team1?.id) assignedTeamIds.add(match.team1.id);
           if (match.team2?.id) assignedTeamIds.add(match.team2.id);
         });
-  
+
         console.log("Przypisane drużyny (ID):", assignedTeamIds);
-  
+
         // Formatuj drużyny i usuń te, które już są przypisane do meczu
         const filteredTeams = allTeams
           .filter(team => !assignedTeamIds.has(team.id)) // Usuwamy przypisane drużyny
@@ -56,17 +66,17 @@ const MatchModal = ({ open, onClose, match, tournamentId }) => {
             id: team.id,
             name: `${team.player1.firstName} ${team.player1.lastName} & ${team.player2.firstName} ${team.player2.lastName}`
           }));
-  
+
         console.log("Dostępne drużyny:", filteredTeams);
-  
+
         // Zapisujemy dostępne drużyny do stanu
         setAvailableTeams(filteredTeams);
-  
+
       } catch (error) {
         console.error("Błąd pobierania drużyn lub meczów:", error);
       }
     };
-  
+
     fetchTeams();
   }, [tournamentId, open]);
 
@@ -92,7 +102,7 @@ const MatchModal = ({ open, onClose, match, tournamentId }) => {
     );
     setShowDropdown1(true);
   };
-  
+
   const handleSearch2 = (query) => {
     setTeam2(query);
     setFilteredTeams2(
@@ -106,15 +116,15 @@ const MatchModal = ({ open, onClose, match, tournamentId }) => {
   const handleSelectTeam1 = (name) => {
     setTeam1(name);
     setShowDropdown1(false);
-  
+
     // Aktualizujemy dostępne drużyny (usuwamy wybraną)
     setFilteredTeams2(availableTeams.filter((team) => team.name !== name));
   };
-  
+
   const handleSelectTeam2 = (name) => {
     setTeam2(name);
     setShowDropdown2(false);
-  
+
     // Aktualizujemy dostępne drużyny (usuwamy wybraną)
     setFilteredTeams1(availableTeams.filter((team) => team.name !== name));
   };
@@ -122,12 +132,12 @@ const MatchModal = ({ open, onClose, match, tournamentId }) => {
   const handleSave = async () => {
     const selectedTeam1 = teams.find((team) => team.name === team1);
     const selectedTeam2 = teams.find((team) => team.name === team2);
-  
+
     if (!selectedTeam1 || !selectedTeam2) {
       alert("Proszę wybrać poprawne drużyny");
       return;
     }
-  
+
     try {
       await fetcher(`/matches/assign-teams/${tournamentId}/${matchId}`, {
         method: "POST",
@@ -139,7 +149,7 @@ const MatchModal = ({ open, onClose, match, tournamentId }) => {
           "Content-Type": "application/json",
         },
       });
-  
+
       onClose(); // Zamknij modal
       router.refresh();
     } catch (error) {
@@ -182,103 +192,218 @@ const MatchModal = ({ open, onClose, match, tournamentId }) => {
         setShowDropdown2(false);
       }
     };
-  
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown1, showDropdown2]);
 
+  useEffect(() => {
+    if (match) {
+      setMatchResult(match.result || ""); // Pobranie istniejącego wyniku meczu
+    }
+  }, [match]);
+
+  useEffect(() => {
+    if (match && match.result) {
+      const resultParts = match.result.split(" ");
+      const scores = resultParts[0].split(":").map(Number);
+      setSetScore({ team1: scores[0], team2: scores[1] });
+
+      const details = resultParts[1]?.match(/\(([^)]+)\)/)?.[1]
+        .split(", ")
+        .map(set => set.split(":").map(Number)) || [[0, 0], [0, 0], [0, 0]];
+
+      setSetDetails(details.map(([team1, team2]) => ({ team1, team2 })));
+    }
+  }, [match]);
+
+  const handleSaveResult = async () => {
+    const formattedSetResults = setDetails.map(set => ({
+      team1_score: set.team1,
+      team2_score: set.team2
+    }));
+  
+    try {
+      await fetcher(`/matches/result/${match.id}`, {
+        method: "POST",
+        body: JSON.stringify({ setResults: formattedSetResults }),
+        headers: { "Content-Type": "application/json" },
+      });
+  
+      router.refresh();
+      onClose();
+    } catch (error) {
+      console.error("Błąd zapisu wyniku meczu:", error);
+    }
+  };
 
   return (
     <Dialog open={open} onClose={onClose} className="relative z-10">
       <DialogBackdrop className="fixed inset-0 bg-gray-500/75" />
       <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
         <DialogPanel className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-          <DialogTitle className="text-lg font-semibold text-gray-900">Edytuj drużyny meczu</DialogTitle>
-          <div className="mt-4 space-y-4 relative">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Drużyna 1"
-                value={team1}
-                onChange={(e) => handleSearch1(e.target.value)}
-                onFocus={() => {
-                  setFilteredTeams1(availableTeams.filter((team) => team.name !== team2)); // Pokaż wszystkich, ale bez wybranego w drugim polu
-                  setShowDropdown1(true);
-                }}
-                className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
-              />
-              {showDropdown1 && filteredTeams1.length > 0 && (
-                <ul ref={dropdown1Ref} className="absolute top-full left-0 w-full border rounded-md bg-white shadow-md max-h-40 overflow-auto z-20">
-                  {filteredTeams1.map((team) => (
-                    <li
-                      key={team.id}
-                      className="p-2 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSelectTeam1(team.name)}
-                    >
-                      {team.name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Drużyna 2"
-                value={team2}
-                onChange={(e) => handleSearch2(e.target.value)}
-                onFocus={() => {
-                  setFilteredTeams2(availableTeams.filter((team) => team.name !== team1)); // Pokaż wszystkich, ale bez wybranego w pierwszym polu
-                  setShowDropdown2(true);
-                }}
-                className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
-              />
+          <DialogTitle className="text-lg font-semibold text-gray-900">
+            {match ? `Mecz #${match.id}` : "Edytuj mecz"}
+          </DialogTitle>
 
-              {showDropdown2 && filteredTeams2.length > 0 && (
-                <ul ref={dropdown2Ref}  className="absolute top-full left-0 w-full border rounded-md bg-white shadow-md max-h-40 overflow-auto z-20">
-                  {filteredTeams2.map((team) => (
-                    <li
-                      key={team.id}
-                      className="p-2 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSelectTeam2(team.name)}
-                    >
-                      {team.name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-          <div className="mt-6 flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={handleSave}
-              className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-500"
-            >
-              Zapisz
-            </button>
-
-            {hasAssignedTeams && (
+          {/* Zakładki */}
+          <div className="mt-4 flex border-b">
+            {[
+              { id: "teams", label: "Drużyny" },
+              { id: "result", label: "Wynik meczu" },
+            ].map((tab) => (
               <button
-                type="button"
-                onClick={handleRemoveTeams}
-                className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold hover:bg-red-500"
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`py-2 px-4 font-semibold ${activeTab === tab.id ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"
+                  }`}
               >
-                Usuń drużyny
+                {tab.label}
               </button>
-            )}
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-md bg-gray-300 text-gray-900 font-semibold hover:bg-gray-400"
-            >
-              Anuluj
-            </button>
+            ))}
           </div>
-        </DialogPanel>
-      </div>
-    </Dialog>
+          {activeTab === "teams" && (
+            <div className="mt-4 space-y-4 relative">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Drużyna 1"
+                  value={team1}
+                  onChange={(e) => handleSearch1(e.target.value)}
+                  onFocus={() => {
+                    setFilteredTeams1(availableTeams.filter((team) => team.name !== team2)); // Pokaż wszystkich, ale bez wybranego w drugim polu
+                    setShowDropdown1(true);
+                  }}
+                  className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+                />
+                {showDropdown1 && filteredTeams1.length > 0 && (
+                  <ul ref={dropdown1Ref} className="absolute top-full left-0 w-full border rounded-md bg-white shadow-md max-h-40 overflow-auto z-20">
+                    {filteredTeams1.map((team) => (
+                      <li
+                        key={team.id}
+                        className="p-2 cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSelectTeam1(team.name)}
+                      >
+                        {team.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Drużyna 2"
+                  value={team2}
+                  onChange={(e) => handleSearch2(e.target.value)}
+                  onFocus={() => {
+                    setFilteredTeams2(availableTeams.filter((team) => team.name !== team1)); // Pokaż wszystkich, ale bez wybranego w pierwszym polu
+                    setShowDropdown2(true);
+                  }}
+                  className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+                />
+
+                {showDropdown2 && filteredTeams2.length > 0 && (
+                  <ul ref={dropdown2Ref} className="absolute top-full left-0 w-full border rounded-md bg-white shadow-md max-h-40 overflow-auto z-20">
+                    {filteredTeams2.map((team) => (
+                      <li
+                        key={team.id}
+                        className="p-2 cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSelectTeam2(team.name)}
+                      >
+                        {team.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === "result" && (
+            <div className="mt-6 text-center">
+              
+
+              {/* Wyniki poszczególnych setów */}
+              <div className="mt-6 text-center">
+                <label className="block text-sm font-semibold text-gray-900">Dokładne wyniki setów</label>
+                <div className="flex flex-col items-center mt-2 space-y-2">
+                  {setDetails.map((set, index) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <span className="text-xs font-medium">Set {index + 1}:</span>
+                      <input
+                        type="number"
+                        value={set.team1}
+                        onChange={(e) => {
+                          const newSetDetails = [...setDetails];
+                          newSetDetails[index].team1 = Number(e.target.value);
+                          setSetDetails(newSetDetails);
+                        }}
+                        className="w-12 h-8 text-sm p-1 border rounded-md text-center"
+                        min="0"
+                      />
+                      <span className="text-sm font-semibold">:</span>
+                      <input
+                        type="number"
+                        value={set.team2}
+                        onChange={(e) => {
+                          const newSetDetails = [...setDetails];
+                          newSetDetails[index].team2 = Number(e.target.value);
+                          setSetDetails(newSetDetails);
+                        }}
+                        className="w-12 h-8 text-sm p-1 border rounded-md text-center"
+                        min="0"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+
+
+
+
+
+              <div className="mt-6 flex justify-end space-x-4">
+                {activeTab === "teams" && (
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-500"
+                  >
+                    Zapisz
+                  </button>
+                )}
+                {hasAssignedTeams && activeTab === "teams" && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveTeams}
+                    className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold hover:bg-red-500"
+                  >
+                    Usuń drużyny
+                  </button>
+                )}
+                {activeTab === "result" && (
+                  <button
+                    type="button"
+                    onClick={handleSaveResult}
+                    className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-500"
+                  >
+                    Zapisz
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 rounded-md bg-gray-300 text-gray-900 font-semibold hover:bg-gray-400"
+                >
+                  Anuluj
+                </button>
+              </div>
+            </DialogPanel>
+      </div >
+    </Dialog >
   );
 };
 

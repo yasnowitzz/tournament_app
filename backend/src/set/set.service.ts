@@ -9,18 +9,27 @@ export class SetService {
   constructor(
     @InjectRepository(Set)
     private setRepository: Repository<Set>,
+    @InjectRepository(Match)
+    private matchRepository: Repository<Match>,
   ) {}
 
-  async saveMatchSets(match: Match, setResults: { team1_score: number, team2_score: number }[]) {
+  async saveMatchSets(match: Match, setResults: { team1_score: number, team2_score: number }[]) {  
     const sets = setResults.map((setResult, index) => {
       const set = new Set();
-      set.match = match;
+      set.match = match; // Przypisanie meczu
       set.team1_score = setResult.team1_score;
       set.team2_score = setResult.team2_score;
       set.set_number = index + 1;
+      console.log(`Set before save:`, set); // Debug
       return set;
     });
-
+  
+    // Wymuś przypisanie do `match.sets`
+    match.sets = [...match.sets, ...sets];
+  
+    console.log("Match with new sets:", match);
+  
+    await this.matchRepository.save(match); // Wymuszenie zapisu meczu przed zapisaniem setów
     return this.setRepository.save(sets);
   }
 
