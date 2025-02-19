@@ -14,7 +14,6 @@ const Home = () => {
     // Fetch tournaments from an API or local state
     fetcher("/tournaments")
     .then((res) => {
-      console.log("Response received:", res);
       if (Array.isArray(res)) {
         return res; // Directly return array if already parsed
       }
@@ -24,7 +23,6 @@ const Home = () => {
       return res.json();
     })
     .then((data) => {
-      console.log("Fetched tournaments:", data); // Debugging output
       setTournaments(data);
     })
     .catch((error) => console.error("Error fetching tournaments:", error));

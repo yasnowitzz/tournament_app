@@ -4,7 +4,7 @@ import { fetcher } from "../services/api";
 import { useRouter } from "next/navigation"; // Correct Next.js navigation
 
 
-const MatchModal = ({ open, onClose, match, tournamentId }) => {
+const MatchModal = ({ open, onClose = () => {}, match, tournamentId }) => {
   const [team1, setTeam1] = useState("");
   const [team2, setTeam2] = useState("");
   const [teams, setTeams] = useState([]);
@@ -22,9 +22,9 @@ const MatchModal = ({ open, onClose, match, tournamentId }) => {
   const [activeTab, setActiveTab] = useState("teams"); // Dodana zakładka
   const [setScore, setSetScore] = useState({ team1: 0, team2: 0 });
   const [setDetails, setSetDetails] = useState([
-    { team1: null, team2: null },
-    { team1: null, team2: null },
-    { team1: null, team2: null },
+    { team1: 0, team2: 0 },
+    { team1: 0, team2: 0 },
+    { team1: 0, team2: 0 },
   ]);
 
 
@@ -229,9 +229,9 @@ const MatchModal = ({ open, onClose, match, tournamentId }) => {
         body: JSON.stringify({ setResults: formattedSetResults }),
         headers: { "Content-Type": "application/json" },
       });
-  
-      router.refresh();
+      console.log("Zamykanie modala..."); // Debugowanie
       onClose();
+      router.refresh();
     } catch (error) {
       console.error("Błąd zapisu wyniku meczu:", error);
     }

@@ -7,7 +7,6 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 
 @Controller('tournaments')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class TournamentController {
     constructor(private readonly tournamentService: TournamentService) { }
 
@@ -27,6 +26,7 @@ export class TournamentController {
 
     @Post()
     @Roles('admin')
+    @UseGuards(JwtAuthGuard, RolesGuard)
     async create(@Body() tournamentData: Partial<Tournament>): Promise<Tournament> {
         console.log('Creating tournament:', tournamentData);
         return this.tournamentService.create(tournamentData);

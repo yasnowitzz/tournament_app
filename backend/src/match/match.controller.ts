@@ -49,4 +49,9 @@ export class MatchController {
   ) {
     return this.matchService.removeTeamsFromSpecificMatch(tournamentId, matchId);
   }
+  @Get(':matchId/result')                                                                                           
+  async getMatchResult(@Param('matchId') matchId: number) {                                                         
+    return this.matchService.getMatchResult(matchId);                                                               
+  }  
+
 }

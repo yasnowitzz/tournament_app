@@ -104,6 +104,15 @@ const TournamentDetails = () => {
 
   const groupedMatches = groupAndSortMatches(matches);
 
+  const getWinner = () => {
+    const team1SetsWon = setDetails.filter(set => set.team1 > set.team2).length;
+    const team2SetsWon = setDetails.filter(set => set.team2 > set.team1).length;
+
+    if (team1SetsWon > team2SetsWon) return "team1";
+    if (team2SetsWon > team1SetsWon) return "team2";
+    return null; // Remis lub brak wyniku
+  };
+
   if (!tournament) return <p className="text-gray-700">Ładowanie szczegółów turnieju...</p>;
 
   return (
@@ -146,42 +155,91 @@ const TournamentDetails = () => {
       <div className="mt-6">
         {activeTab === "matches" && (
           <>
-            {Object.entries(groupedMatches).map(([stage, stageMatches]) => (
-              <div key={stage} className="mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">{stage}</h2>
-                <ul role="list" className="divide-y divide-gray-100">
-                  {stageMatches.map((match) => (
-                    <li
-                      key={match.id}
-                      className="flex justify-between gap-x-6 py-5 cursor-pointer hover:bg-gray-100"
-                      onClick={() => openMatchModal(match)}
-                    >
-                      <div className="flex min-w-0 gap-x-4">
-                        <div className="min-w-0 flex-auto">
-                          <p className="text-sm font-semibold text-gray-900">
-                            {match.team1
-                              ? `${match.team1.player1.lastName} / ${match.team1.player2.lastName}`
-                              : "TBD"} vs{" "}
-                            {match.team2
-                              ? `${match.team2.player1.lastName} / ${match.team2.player2.lastName}`
-                              : "TBD"}
-                          </p>
-                          <p className="mt-1 text-xs text-gray-500">{match.matchTime || "Godzina nieznana"}</p>
-                        </div>
-                      </div>
-                      <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-                        <p className="text-sm text-gray-900">Boisko: {match.court || "N/A"}</p>
-                        <p className="text-sm font-medium text-blue-600">
-                          {results[match.id] && results[match.id].team1_score !== undefined && results[match.id].team2_score !== undefined
-                            ? `${results[match.id].team1_score} - ${results[match.id].team2_score}`
-                            : "Brak wyniku"}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {Object.entries(groupedMatches).map(([stage, stageMatches]) => {
+              const maxSets = stageMatches.reduce((max, match) => {
+                const sets = results[match.id]?.sets || [];
+                return Math.max(max, sets.length);
+              }, 0);
+
+              return (
+                <div key={stage} className="mb-8">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">{stage}</h2>
+                  <div className="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+                    <div className="max-h-[500px] overflow-y-auto">
+                      {/* Ustawienie fixed-header */}
+                      <table className="min-w-full divide-y divide-gray-300">
+                        <thead className="bg-gray-50 sticky top-0 z-10">
+                          <tr>
+                            <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 w-56">
+                              Drużyny
+                            </th>
+                            <th className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900 w-24">
+                              Wynik meczu
+                            </th>
+                            {Array.from({ length: maxSets }, (_, i) => (
+                              <th
+                                key={i}
+                                className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900 w-20"
+                              >
+                                Set {i + 1}
+                              </th>
+                            ))}
+                            <th className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900 w-20">
+                              Boisko
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                          {stageMatches.map((match) => {
+                            const sets = results[match.id]?.sets || [];
+                            const team1Wins = sets.filter(set => set.team1_score > set.team2_score).length;
+                            const team2Wins = sets.filter(set => set.team2_score > set.team1_score).length;
+                            const winner = team1Wins > team2Wins ? "team1" : team2Wins > team1Wins ? "team2" : null; // ⬅ ZMIANA
+
+                            return (
+                              <tr
+                                key={match.id}
+                                onClick={() => openMatchModal(match)}
+                                className="hover:bg-gray-50 cursor-pointer"
+                              >
+                                <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6 w-56">
+                                  <div className={`truncate ${winner === "team1" ? "font-bold text-blue-600" : ""}`}> {/* ⬅ ZMIANA */}
+                                    {match.team1 ? `${match.team1.player1?.lastName} & ${match.team1.player2?.lastName}` : "TBD"}
+                                  </div>
+                                  <div className={`truncate ${winner === "team2" ? "font-bold text-blue-600" : ""}`}> {/* ⬅ ZMIANA */}
+                                    {match.team2 ? `${match.team2.player1?.lastName} & ${match.team2.player2?.lastName}` : "TBD"}
+                                  </div>
+                                </td>
+                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 text-center w-24">
+                                  {sets.length > 0 ? (
+                                    <span className="font-semibold">
+                                      {team1Wins > 0 || team2Wins > 0 ? `${team1Wins}-${team2Wins}` : "-"}
+                                    </span>
+                                  ) : "-"}
+                                </td>
+                                {Array.from({ length: maxSets }, (_, i) => {
+                                  const set = sets[i];
+                                  return (
+                                    <td key={i} className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center w-20">
+                                      {set && (set.team1_score > 0 || set.team2_score > 0)
+                                        ? `${set.team1_score}-${set.team2_score}`
+                                        : "-"}
+                                    </td>
+                                  );
+                                })}
+                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center w-20">
+                                  {match.court || "N/A"}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </>
         )}
 
@@ -192,9 +250,9 @@ const TournamentDetails = () => {
             <h2 className="text-lg font-semibold text-gray-900">Lista drużyn</h2>
             <ul className="mt-4 divide-y divide-gray-100">
               {teams.length > 0 ? (
-                teams.map((team) => (
+                teams.map((team, index) => (
                   <li key={team.id} className="py-3">
-                    <p className="text-gray-800 font-medium">Drużyna #{team.id}</p>
+                    <p className="text-gray-800 font-medium">{index + 1}. Drużyna</p> {/* ⬅ ZAMIANA team.id na index + 1 */}
                     <p className="text-sm text-gray-600">
                       {team.player1.lastName} & {team.player2.lastName}
                     </p>
@@ -206,6 +264,7 @@ const TournamentDetails = () => {
             </ul>
           </div>
         )}
+
       </div>
 
       {/* Modale */}

@@ -6,7 +6,7 @@ import { Tournament } from '../tournament/tournament.entity';
 import { Team } from '../team/team.entity';
 import { SetService } from '../set/set.service';
 import { Set } from '../set/set.entity';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -219,6 +219,8 @@ export class MatchService {
 
     // Automatyczna aktualizacja kolejnego meczu
     await this.updateNextMatch(match.id, winningTeamId);
+
+    return { message: 'Score updated successfully' };
   }
 
   async updateNextMatch(matchId: number, winningTeamId: number) {
@@ -338,4 +340,17 @@ export class MatchService {
       .where('tournament.id = :tournamentId', { tournamentId })
       .getMany();
   }
+
+  async getMatchResult(matchId: number): Promise<Match> {                                                            
+    const match = await this.matchRepository.findOne({                                                               
+      where: { id: matchId },                                                                                        
+      relations: ['team1', 'team2', 'sets'], // Załaduj powiązane encje jeśli są potrzebne                           
+    });                                                                                                              
+                                                                                                                     
+    if (!match) {                                                                                                    
+      throw new NotFoundException(`Mecz o ID ${matchId} nie został znaleziony.`);                                    
+    }                                                                                                                
+                                                                                                                     
+    return match;                                                                                                    
+  } 
 }
