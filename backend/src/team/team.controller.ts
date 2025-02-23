@@ -19,19 +19,8 @@ export class TeamController {
     private readonly userService: UserService // ✅ Inject UserService
   ) { }
 
-
-  // @Post()
-  // async create(@Body() teamData: { name: string; ownerId: number }) {
-  //   return this.teamService.create(teamData);
-  // }
-
-  // @Get(':ownerId')
-  // async getTeamsByOwner(@Param('ownerId') ownerId: number) {
-  //   return this.teamService.getTeamsByOwner(ownerId);
-  // }
-
   @Post('register/:tournamentId')
-  @UseGuards(JwtAuthGuard, RolesGuard) // ✅ Requires authentication
+  @UseGuards(JwtAuthGuard) // ✅ Requires authentication
   async registerTeam(
     @Param('tournamentId') tournamentId: number,
     @Body() partnerDetails: { firstName: string; lastName: string; email: string },
@@ -45,7 +34,6 @@ export class TeamController {
 
     // ✅ Find the logged-in user by ID
     const player1 = await this.userService.findById(user.userId);
-    console
     if (!player1) {
       throw new UnauthorizedException('User not found');
     }

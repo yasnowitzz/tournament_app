@@ -5,8 +5,11 @@ import { fetcher } from "../../../services/api";
 import SignupModal from "../../../components/SignupModal";
 import MatchModal from "../../../components/MatchModal";
 import DoubleEliminationBracket from "../../../components/DoubleEliminationBracket";
+import { useAuth } from "../../../context/AuthContext"; 
 
 const TournamentDetails = () => {
+  const { user } = useAuth();
+  console.log(user);
   const { id } = useParams();
   const tournamentId = Number(id);
 
@@ -119,11 +122,13 @@ const TournamentDetails = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mt-4">
         <h1 className="text-3xl font-bold">Szczegóły Turnieju #{tournament.id}</h1>
+        {user?.role === "player" && (
         <button
           onClick={openSignupModal}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition">
           Zapisz się do turnieju
         </button>
+      )}
       </div>
       <p className="text-gray-700 mt-2">Liczba drużyn: {tournament.numTeams}</p>
       <p className="text-gray-700">Liczba boisk: {tournament.numCourts}</p>
@@ -199,8 +204,8 @@ const TournamentDetails = () => {
                             return (
                               <tr
                                 key={match.id}
-                                onClick={() => openMatchModal(match)}
-                                className="hover:bg-gray-50 cursor-pointer"
+                                onClick={user?.role === "admin" ? () => openMatchModal(match) : undefined}                                               
+                                className={`hover:bg-gray-50 ${user?.role === "admin" ? "cursor-pointer" : "cursor-not-allowed"}`}
                               >
                                 <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6 w-56">
                                   <div className={`truncate ${winner === "team1" ? "font-bold text-blue-600" : ""}`}> {/* ⬅ ZMIANA */}

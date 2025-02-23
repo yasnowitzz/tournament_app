@@ -32,8 +32,4 @@ export class SetService {
     await this.matchRepository.save(match); // Wymuszenie zapisu meczu przed zapisaniem setów
     return this.setRepository.save(sets);
   }
-
-  async getSetsByMatchId(matchId: number): Promise<Set[]> {
-    return this.setRepository.find({ where: { match: { id: matchId } } });
-  }
 }

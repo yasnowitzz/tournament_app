@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { Dialog, DialogPanel, DialogTitle, DialogBackdrop } from "@headlessui/react";
+import CommonModal from "./CommonModal";
 import { fetcher } from "../services/api";
 import { useRouter } from "next/navigation"; // Correct Next.js navigation
 
 
-const MatchModal = ({ open, onClose = () => {}, match, tournamentId }) => {
+
+const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
   const [team1, setTeam1] = useState("");
   const [team2, setTeam2] = useState("");
   const [teams, setTeams] = useState([]);
@@ -222,7 +223,7 @@ const MatchModal = ({ open, onClose = () => {}, match, tournamentId }) => {
       team1_score: set.team1,
       team2_score: set.team2
     }));
-  
+
     try {
       await fetcher(`/matches/result/${match.id}`, {
         method: "POST",
@@ -238,172 +239,174 @@ const MatchModal = ({ open, onClose = () => {}, match, tournamentId }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} className="relative z-10">
+    <CommonModal open={open} onClose={onClose} title={match ? `Mecz #${match.id}` : "Edytuj mecz"}>
+      {/* <Dialog open={open} onClose={onClose} className="relative z-10">
       <DialogBackdrop className="fixed inset-0 bg-gray-500/75" />
       <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
         <DialogPanel className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
           <DialogTitle className="text-lg font-semibold text-gray-900">
             {match ? `Mecz #${match.id}` : "Edytuj mecz"}
-          </DialogTitle>
+          </DialogTitle> */}
 
-          {/* Zakładki */}
-          <div className="mt-4 flex border-b">
-            {[
-              { id: "teams", label: "Drużyny" },
-              { id: "result", label: "Wynik meczu" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-4 font-semibold ${activeTab === tab.id ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"
-                  }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+      {/* Zakładki */}
+      <div className="mt-4 flex border-b">
+        {[
+          { id: "teams", label: "Drużyny" },
+          { id: "result", label: "Wynik meczu" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`py-2 px-4 font-semibold ${activeTab === tab.id ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-500"
+              }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      {activeTab === "teams" && (
+        <div className="mt-4 space-y-4 relative">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Drużyna 1"
+              value={team1}
+              onChange={(e) => handleSearch1(e.target.value)}
+              onFocus={() => {
+                setFilteredTeams1(availableTeams.filter((team) => team.name !== team2)); // Pokaż wszystkich, ale bez wybranego w drugim polu
+                setShowDropdown1(true);
+              }}
+              className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+            />
+            {showDropdown1 && filteredTeams1.length > 0 && (
+              <ul ref={dropdown1Ref} className="absolute top-full left-0 w-full border rounded-md bg-white shadow-md max-h-40 overflow-auto z-20">
+                {filteredTeams1.map((team) => (
+                  <li
+                    key={team.id}
+                    className="p-2 cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSelectTeam1(team.name)}
+                  >
+                    {team.name}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          {activeTab === "teams" && (
-            <div className="mt-4 space-y-4 relative">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Drużyna 1"
-                  value={team1}
-                  onChange={(e) => handleSearch1(e.target.value)}
-                  onFocus={() => {
-                    setFilteredTeams1(availableTeams.filter((team) => team.name !== team2)); // Pokaż wszystkich, ale bez wybranego w drugim polu
-                    setShowDropdown1(true);
-                  }}
-                  className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
-                />
-                {showDropdown1 && filteredTeams1.length > 0 && (
-                  <ul ref={dropdown1Ref} className="absolute top-full left-0 w-full border rounded-md bg-white shadow-md max-h-40 overflow-auto z-20">
-                    {filteredTeams1.map((team) => (
-                      <li
-                        key={team.id}
-                        className="p-2 cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSelectTeam1(team.name)}
-                      >
-                        {team.name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Drużyna 2"
-                  value={team2}
-                  onChange={(e) => handleSearch2(e.target.value)}
-                  onFocus={() => {
-                    setFilteredTeams2(availableTeams.filter((team) => team.name !== team1)); // Pokaż wszystkich, ale bez wybranego w pierwszym polu
-                    setShowDropdown2(true);
-                  }}
-                  className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
-                />
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Drużyna 2"
+              value={team2}
+              onChange={(e) => handleSearch2(e.target.value)}
+              onFocus={() => {
+                setFilteredTeams2(availableTeams.filter((team) => team.name !== team1)); // Pokaż wszystkich, ale bez wybranego w pierwszym polu
+                setShowDropdown2(true);
+              }}
+              className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+            />
 
-                {showDropdown2 && filteredTeams2.length > 0 && (
-                  <ul ref={dropdown2Ref} className="absolute top-full left-0 w-full border rounded-md bg-white shadow-md max-h-40 overflow-auto z-20">
-                    {filteredTeams2.map((team) => (
-                      <li
-                        key={team.id}
-                        className="p-2 cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSelectTeam2(team.name)}
-                      >
-                        {team.name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          )}
-          {activeTab === "result" && (
-            <div className="mt-6 text-center">
-              
+            {showDropdown2 && filteredTeams2.length > 0 && (
+              <ul ref={dropdown2Ref} className="absolute top-full left-0 w-full border rounded-md bg-white shadow-md max-h-40 overflow-auto z-20">
+                {filteredTeams2.map((team) => (
+                  <li
+                    key={team.id}
+                    className="p-2 cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSelectTeam2(team.name)}
+                  >
+                    {team.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+      {activeTab === "result" && (
+        <div className="mt-6 text-center">
 
-              {/* Wyniki poszczególnych setów */}
-              <div className="mt-6 text-center">
-                <label className="block text-sm font-semibold text-gray-900">Dokładne wyniki setów</label>
-                <div className="flex flex-col items-center mt-2 space-y-2">
-                  {setDetails.map((set, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <span className="text-xs font-medium">Set {index + 1}:</span>
-                      <input
-                        type="number"
-                        value={set.team1}
-                        onChange={(e) => {
-                          const newSetDetails = [...setDetails];
-                          newSetDetails[index].team1 = Number(e.target.value);
-                          setSetDetails(newSetDetails);
-                        }}
-                        className="w-12 h-8 text-sm p-1 border rounded-md text-center"
-                        min="0"
-                      />
-                      <span className="text-sm font-semibold">:</span>
-                      <input
-                        type="number"
-                        value={set.team2}
-                        onChange={(e) => {
-                          const newSetDetails = [...setDetails];
-                          newSetDetails[index].team2 = Number(e.target.value);
-                          setSetDetails(newSetDetails);
-                        }}
-                        className="w-12 h-8 text-sm p-1 border rounded-md text-center"
-                        min="0"
-                      />
-                    </div>
-                  ))}
+
+          {/* Wyniki poszczególnych setów */}
+          <div className="mt-6 text-center">
+            <label className="block text-sm font-semibold text-gray-900">Dokładne wyniki setów</label>
+            <div className="flex flex-col items-center mt-2 space-y-2">
+              {setDetails.map((set, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <span className="text-xs font-medium">Set {index + 1}:</span>
+                  <input
+                    type="number"
+                    value={set.team1}
+                    onChange={(e) => {
+                      const newSetDetails = [...setDetails];
+                      newSetDetails[index].team1 = Number(e.target.value);
+                      setSetDetails(newSetDetails);
+                    }}
+                    className="w-12 h-8 text-sm p-1 border rounded-md text-center"
+                    min="0"
+                  />
+                  <span className="text-sm font-semibold">:</span>
+                  <input
+                    type="number"
+                    value={set.team2}
+                    onChange={(e) => {
+                      const newSetDetails = [...setDetails];
+                      newSetDetails[index].team2 = Number(e.target.value);
+                      setSetDetails(newSetDetails);
+                    }}
+                    className="w-12 h-8 text-sm p-1 border rounded-md text-center"
+                    min="0"
+                  />
                 </div>
-              </div>
+              ))}
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
 
 
 
 
 
-              <div className="mt-6 flex justify-end space-x-4">
-                {activeTab === "teams" && (
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-500"
-                  >
-                    Zapisz
-                  </button>
-                )}
-                {hasAssignedTeams && activeTab === "teams" && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveTeams}
-                    className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold hover:bg-red-500"
-                  >
-                    Usuń drużyny
-                  </button>
-                )}
-                {activeTab === "result" && (
-                  <button
-                    type="button"
-                    onClick={handleSaveResult}
-                    className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-500"
-                  >
-                    Zapisz
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 rounded-md bg-gray-300 text-gray-900 font-semibold hover:bg-gray-400"
-                >
-                  Anuluj
-                </button>
-              </div>
-            </DialogPanel>
+      <div className="mt-6 flex justify-end space-x-4">
+        {activeTab === "teams" && (
+          <button
+            type="button"
+            onClick={handleSave}
+            className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-500"
+          >
+            Zapisz
+          </button>
+        )}
+        {hasAssignedTeams && activeTab === "teams" && (
+          <button
+            type="button"
+            onClick={handleRemoveTeams}
+            className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold hover:bg-red-500"
+          >
+            Usuń drużyny
+          </button>
+        )}
+        {activeTab === "result" && (
+          <button
+            type="button"
+            onClick={handleSaveResult}
+            className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-500"
+          >
+            Zapisz
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 rounded-md bg-gray-300 text-gray-900 font-semibold hover:bg-gray-400"
+        >
+          Anuluj
+        </button>
+      </div>
+      {/* </DialogPanel>
       </div >
-    </Dialog >
+    </Dialog > */}
+    </CommonModal>
   );
 };
 

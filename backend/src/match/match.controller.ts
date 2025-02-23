@@ -1,6 +1,9 @@
-import { Controller, Post, Body, Param, Get, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Delete, UseGuards } from '@nestjs/common';
 import { MatchService } from './match.service';
 import { Match } from './match.entity';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 
 @Controller('matches')
@@ -8,6 +11,8 @@ export class MatchController {
   constructor(private readonly matchService: MatchService) { }
 
   @Post('create/:tournamentId')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async createMatches(
     @Param('tournamentId') tournamentId: number,
     @Body('numTeams') numTeams: number,
@@ -16,11 +21,15 @@ export class MatchController {
   }
 
   @Post('assign-teams/:tournamentId')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async assignTeams(@Param('tournamentId') tournamentId: number, @Body() teams: any) {
     return this.matchService.assignTeamsToMatches(tournamentId, teams);
   }
 
   @Post('result/:matchId')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async updateMatchResult(
     @Param('matchId') matchId: number,
     @Body() body: { setResults: { team1_score: number, team2_score: number }[] }
@@ -34,6 +43,8 @@ export class MatchController {
   }
 
   @Post('assign-teams/:tournamentId/:matchId')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async assignTeamsToMatch(
     @Param('tournamentId') tournamentId: number,
     @Param('matchId') matchId: number,
@@ -43,6 +54,8 @@ export class MatchController {
   }
 
   @Delete('remove-teams/:tournamentId/:matchId')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async removeTeamsFromMatch(
     @Param('tournamentId') tournamentId: number,
     @Param('matchId') matchId: number

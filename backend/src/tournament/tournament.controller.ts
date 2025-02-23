@@ -31,17 +31,4 @@ export class TournamentController {
         console.log('Creating tournament:', tournamentData);
         return this.tournamentService.create(tournamentData);
     }
-
-    @Post(':tournamentId/add-teams')
-    async addTeams(
-      @Param('tournamentId') tournamentId: number,
-      @Body() body: { teamIds: number[] }
-    ) {
-      return this.tournamentService.addTeamsToTournament(tournamentId, body.teamIds);
-    }
-  
-    @Get(':tournamentId/teams')
-    async getTournamentTeams(@Param('tournamentId') tournamentId: number) {
-      return this.tournamentService.getTournamentTeams(tournamentId);
-    }
 }

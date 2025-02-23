@@ -7,15 +7,6 @@ export class Tournament {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  // @Column()
-  // name!: string;
-
-  // @Column()
-  // format!: string; // 'playoff', 'groups', 'brazilian'
-
-  // @Column()
-  // startDate!: Date;
-
   @Column()
   numTeams!: number;
 

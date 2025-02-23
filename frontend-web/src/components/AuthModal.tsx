@@ -1,6 +1,8 @@
 import { useState, ChangeEvent, FormEvent } from "react";
 import { fetcher } from "../services/api";
 import { useRouter } from "next/navigation";
+import CommonModal from "./CommonModal";
+
 
 interface FormData {
   email: string;
@@ -68,105 +70,98 @@ export default function Register() {
     }
   };
 
-    return (
-      <div className="container mx-auto p-4">
-        <button
-          className="bg-blue-600 text-white p-2 rounded mr-4"
-          onClick={() => {
-            setIsLoginMode(true);
-            setIsModalOpen(true);
-          }}
-        >
-          Zaloguj się
-        </button>
-        <button
-          className="bg-green-600 text-white p-2 rounded"
-          onClick={() => {
-            setIsLoginMode(false);
-            setIsModalOpen(true);
-          }}
-        >
-          Zarejestruj się
-        </button>
-
-        {isModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded shadow-lg w-96 relative">
-              <button
-                className="absolute top-2 right-2 text-gray-600 hover:text-black"
-                onClick={() => setIsModalOpen(false)}
-              >
-                ✖
-              </button>
-              <h1 className="text-2xl font-bold text-center">
-                {isLoginMode ? "Logowanie" : "Rejestracja"}
-              </h1>
-              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-                {!isLoginMode && (
-                  <>
-                    <input
-                      type="text"
-                      name="firstName"
-                      placeholder="Imię"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                    <input
-                      type="text"
-                      name="lastName"
-                      placeholder="Nazwisko"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                    <select
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="player">Zawodnik</option>
-                      <option value="admin">Koordynator turnieju</option>
-                    </select>
-                  </>
-                )}
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Hasło"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-                <button type="submit" className="w-full p-2 bg-blue-600 text-white rounded">
-                  {isLoginMode ? "Zaloguj się" : "Zarejestruj się"}
-                </button>
-              </form>
-              <p className="text-center mt-4">
-                {isLoginMode ? "Nie masz konta?" : "Masz już konto?"}
-                <button
-                  className="text-blue-600 underline"
-                  onClick={() => setIsLoginMode(!isLoginMode)}
-                >
-                  {isLoginMode ? "Zarejestruj się" : "Zaloguj się"}
-                </button>
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
+  return (                                                                                                                                            
+    <div className="container mx-auto p-4">                                                                                                           
+      <button                                                                                                                                         
+        className="bg-blue-600 text-white p-2 rounded mr-4"                                                                                           
+        onClick={() => {                                                                                                                              
+          setIsLoginMode(true);                                                                                                                       
+          setIsModalOpen(true);                                                                                                                       
+        }}                                                                                                                                            
+      >                                                                                                                                               
+        Zaloguj się                                                                                                                                   
+      </button>                                                                                                                                       
+      <button                                                                                                                                         
+        className="bg-green-600 text-white p-2 rounded"                                                                                               
+        onClick={() => {                                                                                                                              
+          setIsLoginMode(false);                                                                                                                      
+          setIsModalOpen(true);                                                                                                                       
+        }}                                                                                                                                            
+      >                                                                                                                                               
+        Zarejestruj się                                                                                                                               
+      </button>                                                                                                                                       
+                                                                                                                                                      
+      {isModalOpen && (                                                                                                                               
+        <CommonModal                                                                                                                                  
+          open={isModalOpen}                                                                                                                          
+          onClose={() => setIsModalOpen(false)}                                                                                                       
+          title={isLoginMode ? "Logowanie" : "Rejestracja"}                                                                                           
+        >                                                                                                                                             
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">                                                                                   
+            <input                                                                                                                                    
+              type="email"                                                                                                                            
+              name="email"                                                                                                                            
+              placeholder="Email"                                                                                                                     
+              value={formData.email}                                                                                                                  
+              onChange={handleChange}                                                                                                                 
+              className="w-full p-2 border rounded"                                                                                                   
+              required                                                                                                                                
+            />                                                                                                                                        
+            {!isLoginMode && (                                                                                                                        
+              <>                                                                                                                                      
+                <input                                                                                                                                
+                  type="text"                                                                                                                         
+                  name="firstName"                                                                                                                    
+                  placeholder="Imię"                                                                                                                  
+                  value={formData.firstName}                                                                                                          
+                  onChange={handleChange}                                                                                                             
+                  className="w-full p-2 border rounded"                                                                                               
+                  required                                                                                                                            
+                />                                                                                                                                    
+                <input                                                                                                                                
+                  type="text"                                                                                                                         
+                  name="lastName"                                                                                                                     
+                  placeholder="Nazwisko"                                                                                                              
+                  value={formData.lastName}                                                                                                           
+                  onChange={handleChange}                                                                                                             
+                  className="w-full p-2 border rounded"                                                                                               
+                  required                                                                                                                            
+                />                                                                                                                                    
+                <select                                                                                                                               
+                  name="role"                                                                                                                         
+                  value={formData.role}                                                                                                               
+                  onChange={handleChange}                                                                                                             
+                  className="w-full p-2 border rounded"                                                                                               
+                >                                                                                                                                     
+                  <option value="player">Zawodnik</option>                                                                                            
+                  <option value="admin">Koordynator turnieju</option>                                                                                 
+                </select>                                                                                                                             
+              </>                                                                                                                                     
+            )}                                                                                                                                        
+            <input                                                                                                                                    
+              type="password"                                                                                                                         
+              name="password"                                                                                                                         
+              placeholder="Hasło"                                                                                                                     
+              value={formData.password}                                                                                                               
+              onChange={handleChange}                                                                                                                 
+              className="w-full p-2 border rounded"                                                                                                   
+              required                                                                                                                                
+            />                                                                                                                                        
+            <button type="submit" className="w-full p-2 bg-blue-600 text-white rounded">                                                              
+              {isLoginMode ? "Zaloguj się" : "Zarejestruj się"}                                                                                       
+            </button>                                                                                                                                 
+          </form>                                                                                                                                     
+          <p className="text-center mt-4">                                                                                                            
+            {isLoginMode ? "Nie masz konta?" : "Masz już konto?"}                                                                                     
+            <button                                                                                                                                   
+              className="text-blue-600 underline"                                                                                                     
+              onClick={() => setIsLoginMode(!isLoginMode)}                                                                                            
+            >                                                                                                                                         
+              {isLoginMode ? "Zarejestruj się" : "Zaloguj się"}                                                                                       
+            </button>                                                                                                                                 
+          </p>                                                                                                                                        
+        </CommonModal>                                                                                                                                
+      )}                                                                                                                                              
+    </div>                                                                                                                                            
+  );                                                                                                                                                  
+}

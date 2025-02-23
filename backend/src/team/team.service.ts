@@ -36,12 +36,17 @@ export class TeamService {
   ): Promise<Team> {
     const tournament = await this.tournamentRepository.findOne({
       where: { id: tournamentId },
-      relations: ['teams'],
+      relations: ['teams', 'teams.player1', 'teams.player2'], 
     });
   
     if (!tournament) {
       throw new Error('Tournament not found');
     }
+    
+    console.log('Tournament:', tournament);                                                               
+    tournament.teams.forEach((team, index) => {                                                           
+      console.log(`Team ${index + 1}:`, team);                                                            
+    });
   
     // Sprawdzenie, czy player1 już jest zapisany w jakiejś drużynie w tym turnieju
     const existingTeam = tournament.teams.find(

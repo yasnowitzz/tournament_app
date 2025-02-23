@@ -2,15 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
 import { Tournament } from './tournament.entity';
-import { Team } from '../team/team.entity';
 
 @Injectable()
 export class TournamentService {
   constructor(
     @InjectRepository(Tournament)
     private readonly tournamentRepo: Repository<Tournament>,
-    @InjectRepository(Team)
-    private teamRepository: Repository<Team>,
   ) { }
 
   async findById(id: number): Promise<Tournament | undefined> {
@@ -42,34 +39,5 @@ export class TournamentService {
       console.error('Error saving tournament:', error);
       throw new Error('Failed to create tournament');
     }
-  }
-
-  async addTeamsToTournament(tournamentId: number, teamIds: number[]): Promise<Tournament> {
-    const tournament = await this.tournamentRepo.findOne({
-      where: { id: tournamentId },
-      relations: ['teams'],
-    });
-
-    if (!tournament) {
-      throw new Error('Tournament not found');
-    }
-
-    const teams = await this.teamRepository.findByIds(teamIds);
-    tournament.teams = [...tournament.teams, ...teams];
-
-    return this.tournamentRepo.save(tournament);
-  }
-
-  async getTournamentTeams(tournamentId: number): Promise<Team[]> {
-    const tournament = await this.tournamentRepo.findOne({
-      where: { id: tournamentId },
-      relations: ['teams'],
-    });
-
-    if (!tournament) {
-      throw new Error('Tournament not found');
-    }
-
-    return tournament.teams;
   }
 }
