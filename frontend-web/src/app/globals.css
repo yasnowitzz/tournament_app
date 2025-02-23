@@ -70,3 +70,15 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.Toastify__toast--error {                                                                      
+  @apply bg-red-600 text-white border-red-600;                                                 
+}                                                                                              
+                                                                                                                                           
+.Toastify__toast--info {                                                                       
+  @apply bg-blue-600 text-white border-blue-600;                                               
+}                                                                                              
+                                                                                                                                     
+.Toastify__toast--warning {                                                                    
+  @apply bg-yellow-600 text-white border-yellow-600;                                           
+} 
