@@ -79,7 +79,7 @@ export default function TournamentWizard() {
 
       router.push(`/tournament_details/${data.id}`);
     } catch (err) {
-      toast.error("Submission error:", err);
+      toast.error("Błąd podczas zatwierdzania:" + err.message);
     }
   };
 

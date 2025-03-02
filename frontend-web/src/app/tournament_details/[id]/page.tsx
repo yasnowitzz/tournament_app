@@ -28,7 +28,7 @@ const TournamentDetails = () => {
     if (!isNaN(tournamentId)) {
       fetcher(`/tournaments/${tournamentId}`)
         .then((data) => setTournament(data))
-        .catch((error) => toast.error("Błąd ładowania turnieju:", error));
+        .catch((error) => toast.error("Błąd ładowania turnieju:" + error.message));
 
       // Jeśli domyślną zakładką są mecze, pobierz mecze od razu
       if (activeTab === "matches") {
@@ -49,7 +49,7 @@ const TournamentDetails = () => {
             const result = await fetcher(`/matches/${match.id}/result`);
             return { matchId: match.id, result };
           } catch (error) {
-            toast.error(`Błąd ładowania wyniku meczu ${match.id}:`, error);
+            toast.error(`Błąd ładowania wyniku meczu ${match.id}:`);
             return { matchId: match.id, result: null };
           }
         })
@@ -62,14 +62,14 @@ const TournamentDetails = () => {
 
       setResults(resultsMap);
     } catch (error) {
-      toast.error("Błąd ładowania meczów:", error);
+      toast.error("Błąd ładowania meczów:" + error.message);
     }
   };
 
   const fetchTeams = () => {
     fetcher(`/teams/tournament/${tournamentId}`)
       .then((data) => setTeams(data))
-      .catch((error) => toast.error("Błąd ładowania uczestników:", error));
+      .catch((error) => toast.error("Błąd ładowania uczestników:" + error.message));
   };
 
   const openMatchModal = (match) => {

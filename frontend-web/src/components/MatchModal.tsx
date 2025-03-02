@@ -40,7 +40,7 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
         }));
         setTeams(formattedTeams);
       })
-      .catch((error) => toast.error("Error fetching teams:", error));
+      .catch((error) => toast.error("Błąd pobierania drużyn: " + error.message));
   }, []);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
         setAvailableTeams(filteredTeams);
 
       } catch (error) {
-        toast.error("Błąd pobierania drużyn lub meczów:", error);
+        toast.error("Błąd pobierania drużyn lub meczów:" + error.message);
       }
     };
 
@@ -155,7 +155,7 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
       onClose(); // Zamknij modal
       router.refresh();
     } catch (error) {
-      toast.error("Error assigning teams:", error);
+      toast.error("Błąd przypisywania drużyn:" + error.message);
     }
   };
 
@@ -177,7 +177,7 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
       onClose(); // Zamknij modal
       router.refresh();
     } catch (error) {
-      toast.error("Error removing teams:", error);
+      toast.error("Błąd usuwania drużyn:" + error.message);
     }
   };
 
@@ -235,7 +235,7 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
       onClose();
       router.refresh();
     } catch (error) {
-      toast.error("Błąd zapisu wyniku meczu:", error);
+      toast.error("Błąd zapisu wyniku meczu:" + error.message);
     }
   };
 

@@ -32,7 +32,7 @@ export default function SignupModal({ open, onClose, tournamentId }) {
       onClose();
       router.refresh();
     } catch (err) {
-      toast.error("Submission error:", err);
+      toast.error("Błąd podczas zatwierdzania:" + err.message);
     }
   };
 

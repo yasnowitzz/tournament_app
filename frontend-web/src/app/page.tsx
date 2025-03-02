@@ -27,7 +27,7 @@ const Home = () => {
     .then((data) => {
       setTournaments(data);
     })
-    .catch((error) => toast.error("Error fetching tournaments:", error));
+    .catch((error) => toast.error("Błąd pobierania turniejów:" + error.message));
 }, []);
 
 

@@ -67,7 +67,7 @@ export default function Register() {
         );
         setIsModalOpen(false);
       } catch (err) {
-        toast.error("Wystąpił błąd podczas rejestracji.");
+        toast.error("Wystąpił błąd podczas rejestracji: " + err.message);
       }
     }
   };
@@ -149,11 +149,6 @@ export default function Register() {
               className="w-full p-2 border rounded"
               required
             />
-            {errorMessage && (
-              <div className="mb-4 p-2 bg-red-200 text-red-800 rounded">
-                {errorMessage}
-              </div>
-            )}
             <button type="submit" className="w-full p-2 bg-blue-600 text-white rounded">
               {isLoginMode ? "Zaloguj się" : "Zarejestruj się"}
             </button>

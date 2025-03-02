@@ -67,7 +67,7 @@ const DoubleElimination = ({ tournamentId }) => {
         setWining(winingData);
         setLosing(losingData);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching data:' + error.message);
       } finally {
         setLoading(false);
       }
