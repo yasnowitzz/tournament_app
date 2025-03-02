@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -8,7 +8,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-  ) {}
+  ) { }
 
   async findById(id: number): Promise<User | undefined> {
     const user = await this.userRepo.findOne({ where: { id } });
@@ -21,8 +21,15 @@ export class UserService {
   }
 
   async create(user: Partial<User>): Promise<User> {
-    const newUser = this.userRepo.create(user);
-    return this.userRepo.save(newUser);
+    try {
+      const newUser = this.userRepo.create(user);
+      return await this.userRepo.save(newUser);
+    } catch (error: any) {
+      if (error.code === '23505' && error.constraint === 'UQ_e12875dfb3b1d92d7d7c5377e22') {                                                
+        throw new ConflictException('Email już istnieje');
+      }
+      throw error;                                           
+    }
   }
 
   async update(id: number, userData: Partial<User>): Promise<User> {
