@@ -1,7 +1,8 @@
 "use client";                                                                                                                              
                                                                                                                                             
 import { ToastContainer } from "react-toastify";                                                                                           
-import "react-toastify/dist/ReactToastify.css";                                                                                            
+import "react-toastify/dist/ReactToastify.css";  
+import "../app/globals.css"; // Upewnij się, że ścieżka jest poprawna                                                                                                                       
                                                                                                                                            
 export default function ToastProvider() {                                                                                                  
   return (                                                                                                                                 
@@ -15,7 +16,8 @@ export default function ToastProvider() {
       rtl={false}                                                                                                                          
       pauseOnFocusLoss                                                                                                                     
       draggable                                                                                                                            
-      pauseOnHover                                                                                                                         
+      pauseOnHover
+      theme="colored"
     />                                                                                                                                     
   );                                                                                                                                       
 } 

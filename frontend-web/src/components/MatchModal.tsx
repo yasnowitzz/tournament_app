@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import CommonModal from "./CommonModal";
 import { fetcher } from "../services/api";
 import { useRouter } from "next/navigation"; // Correct Next.js navigation
+import { toast } from "react-toastify";
 
 
 
@@ -39,7 +40,7 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
         }));
         setTeams(formattedTeams);
       })
-      .catch((error) => console.error("Error fetching teams:", error));
+      .catch((error) => toast.error("Error fetching teams:", error));
   }, []);
 
   useEffect(() => {
@@ -74,7 +75,7 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
         setAvailableTeams(filteredTeams);
 
       } catch (error) {
-        console.error("Błąd pobierania drużyn lub meczów:", error);
+        toast.error("Błąd pobierania drużyn lub meczów:", error);
       }
     };
 
@@ -154,7 +155,7 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
       onClose(); // Zamknij modal
       router.refresh();
     } catch (error) {
-      console.error("Error assigning teams:", error);
+      toast.error("Error assigning teams:", error);
     }
   };
 
@@ -176,7 +177,7 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
       onClose(); // Zamknij modal
       router.refresh();
     } catch (error) {
-      console.error("Error removing teams:", error);
+      toast.error("Error removing teams:", error);
     }
   };
 
@@ -234,20 +235,12 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
       onClose();
       router.refresh();
     } catch (error) {
-      console.error("Błąd zapisu wyniku meczu:", error);
+      toast.error("Błąd zapisu wyniku meczu:", error);
     }
   };
 
   return (
     <CommonModal open={open} onClose={onClose} title={match ? `Mecz #${match.id}` : "Edytuj mecz"}>
-      {/* <Dialog open={open} onClose={onClose} className="relative z-10">
-      <DialogBackdrop className="fixed inset-0 bg-gray-500/75" />
-      <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-          <DialogTitle className="text-lg font-semibold text-gray-900">
-            {match ? `Mecz #${match.id}` : "Edytuj mecz"}
-          </DialogTitle> */}
-
       {/* Zakładki */}
       <div className="mt-4 flex border-b">
         {[
@@ -304,7 +297,6 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
               }}
               className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
             />
-
             {showDropdown2 && filteredTeams2.length > 0 && (
               <ul ref={dropdown2Ref} className="absolute top-full left-0 w-full border rounded-md bg-white shadow-md max-h-40 overflow-auto z-20">
                 {filteredTeams2.map((team) => (
@@ -323,8 +315,6 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
       )}
       {activeTab === "result" && (
         <div className="mt-6 text-center">
-
-
           {/* Wyniki poszczególnych setów */}
           <div className="mt-6 text-center">
             <label className="block text-sm font-semibold text-gray-900">Dokładne wyniki setów</label>
@@ -361,12 +351,6 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
           </div>
         </div>
       )}
-
-
-
-
-
-
       <div className="mt-6 flex justify-end space-x-4">
         {activeTab === "teams" && (
           <button
@@ -403,9 +387,6 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
           Anuluj
         </button>
       </div>
-      {/* </DialogPanel>
-      </div >
-    </Dialog > */}
     </CommonModal>
   );
 };

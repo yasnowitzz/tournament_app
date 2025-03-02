@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { fetcher } from '../../services/api';
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+
 
 
 export default function TournamentWizard() {
@@ -77,7 +79,7 @@ export default function TournamentWizard() {
 
       router.push(`/tournament_details/${data.id}`);
     } catch (err) {
-      console.error("Submission error:", err);
+      toast.error("Submission error:", err);
     }
   };
 

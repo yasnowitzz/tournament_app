@@ -33,6 +33,7 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --toastify-color-success: #2e6e30;
   }
   .dark {
     --background: 240 10% 3.9%;
@@ -62,23 +63,22 @@ body {
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
+                                                                                                   
 .Toastify__toast--error {                                                                      
-  @apply bg-red-600 text-white border-red-600;                                                 
+  background-color: #dc2626; /* bg-red-600 */                                                  
+  color: #ffffff; /* text-white */                                                             
+  border-color: #dc2626; /* border-red-600 */                                                  
 }                                                                                              
-                                                                                                                                           
+                                                                                               
 .Toastify__toast--info {                                                                       
-  @apply bg-blue-600 text-white border-blue-600;                                               
+  background-color: #2563eb; /* bg-blue-600 */                                                 
+  color: #ffffff; /* text-white */                                                             
+  border-color: #2563eb; /* border-blue-600 */                                                 
 }                                                                                              
-                                                                                                                                     
+                                                                                               
 .Toastify__toast--warning {                                                                    
-  @apply bg-yellow-600 text-white border-yellow-600;                                           
-} 
+  background-color: #fbbf24; /* bg-yellow-600 */                                               
+  color: #ffffff; /* text-white */                                                             
+  border-color: #fbbf24; /* border-yellow-600 */                                               
+}                                                                                              
+                                                                                               

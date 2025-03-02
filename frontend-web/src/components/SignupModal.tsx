@@ -3,6 +3,7 @@ import { useState } from "react";
 import { fetcher } from "../services/api";
 import CommonModal from "./CommonModal";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 
 export default function SignupModal({ open, onClose, tournamentId }) {
@@ -31,7 +32,7 @@ export default function SignupModal({ open, onClose, tournamentId }) {
       onClose();
       router.refresh();
     } catch (err) {
-      console.error("Submission error:", err);
+      toast.error("Submission error:", err);
     }
   };
 

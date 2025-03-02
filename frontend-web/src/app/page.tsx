@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { fetcher } from "../services/api";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation"; // Correct Next.js navigation
+import { toast } from "react-toastify";
+
 
 
 const Home = () => {
@@ -25,7 +27,7 @@ const Home = () => {
     .then((data) => {
       setTournaments(data);
     })
-    .catch((error) => console.error("Error fetching tournaments:", error));
+    .catch((error) => toast.error("Error fetching tournaments:", error));
 }, []);
 
 
@@ -41,7 +43,7 @@ return (
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             onClick={() => {
-              router.push(`/tournament/${tournament.id}`); // Navigate on card click
+              router.push(`/tournament_details/${tournament.id}`); // Navigate on card click
             }} // Navigate on card click
             className="cursor-pointer"
           >

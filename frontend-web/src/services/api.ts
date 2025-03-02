@@ -14,7 +14,6 @@ export const fetcher = async (endpoint: string, options: RequestInit = {}) => {
 
     return res.json();
   } catch (error) {
-    console.error("Błąd API:", error);
     throw error; // Wyrzucenie błędu do komponentu
   }
 };

@@ -25,7 +25,6 @@ export default function Register() {
   });
   const [isLoginMode, setIsLoginMode] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Dodany stan na błędy                                           
   const router = useRouter();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -52,11 +51,10 @@ export default function Register() {
 
         if (data.access_token) {
           localStorage.setItem("access_token", data.access_token); // Store token
-          // setIsLoggedIn(true); // Update login state
           router.refresh(); // Refresh page
         }
       } catch (err) {
-        setErrorMessage(err.message || "Wystąpił błąd podczas logowania.");
+        toast.error(err.message || "Wystąpił błąd podczas logowania.");
       }
     } else {
       try {
@@ -65,11 +63,11 @@ export default function Register() {
           body: JSON.stringify(formData),
           headers: { "Content-Type": "application/json" },
         });
-
-        toast.success("Link aktywacyjny został wysłany na podany adres email.");
+        toast.success("Link aktywacyjny został wysłany na podany adres email."
+        );
         setIsModalOpen(false);
       } catch (err) {
-        setErrorMessage(err.message || "Wystąpił błąd podczas rejestracji.");
+        toast.error("Wystąpił błąd podczas rejestracji.");
       }
     }
   };

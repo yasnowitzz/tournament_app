@@ -5,7 +5,9 @@ import { fetcher } from "../../../services/api";
 import SignupModal from "../../../components/SignupModal";
 import MatchModal from "../../../components/MatchModal";
 import DoubleEliminationBracket from "../../../components/DoubleEliminationBracket";
-import { useAuth } from "../../../context/AuthContext"; 
+import { useAuth } from "../../../context/AuthContext";
+import { toast } from "react-toastify";
+
 
 const TournamentDetails = () => {
   const { user } = useAuth();
@@ -26,7 +28,7 @@ const TournamentDetails = () => {
     if (!isNaN(tournamentId)) {
       fetcher(`/tournaments/${tournamentId}`)
         .then((data) => setTournament(data))
-        .catch((error) => console.error("Błąd ładowania turnieju:", error));
+        .catch((error) => toast.error("Błąd ładowania turnieju:", error));
 
       // Jeśli domyślną zakładką są mecze, pobierz mecze od razu
       if (activeTab === "matches") {
@@ -47,7 +49,7 @@ const TournamentDetails = () => {
             const result = await fetcher(`/matches/${match.id}/result`);
             return { matchId: match.id, result };
           } catch (error) {
-            console.error(`Błąd ładowania wyniku meczu ${match.id}:`, error);
+            toast.error(`Błąd ładowania wyniku meczu ${match.id}:`, error);
             return { matchId: match.id, result: null };
           }
         })
@@ -60,14 +62,14 @@ const TournamentDetails = () => {
 
       setResults(resultsMap);
     } catch (error) {
-      console.error("Błąd ładowania meczów:", error);
+      toast.error("Błąd ładowania meczów:", error);
     }
   };
 
   const fetchTeams = () => {
     fetcher(`/teams/tournament/${tournamentId}`)
       .then((data) => setTeams(data))
-      .catch((error) => console.error("Błąd ładowania uczestników:", error));
+      .catch((error) => toast.error("Błąd ładowania uczestników:", error));
   };
 
   const openMatchModal = (match) => {
