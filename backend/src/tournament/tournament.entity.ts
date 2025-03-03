@@ -13,8 +13,8 @@ export class Tournament {
   @Column()
   numCourts!: number;
 
-  @Column()
-  startTime!: string;
+  @Column({ type: 'timestamp' })                                                                                  
+  startTime!: Date; 
 
   @Column()
   type!: string; // 'classic' or 'king'
@@ -45,6 +45,12 @@ export class Tournament {
 
   @Column()
   location!: string;
+
+  @Column({ type: 'text' }) // Nowe pole                                                                          
+  tournamentDescription!: string;                                                                                 
+                                                                                                                  
+  @Column({ type: 'int' }) // Nowe pole                                                                           
+  matchDuration!: number; 
 
   @ManyToMany(() => Team, (team) => team.tournaments)
   @JoinTable({ name: 'tournament_teams' })  // ✅ This creates the join table

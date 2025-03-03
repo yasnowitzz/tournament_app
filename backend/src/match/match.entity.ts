@@ -29,9 +29,15 @@ export class Match {
   @Column({ nullable: true })
   winner!: number; // ID zwycięskiej drużyny
 
-  @OneToMany(() => Set, (set) => set.match, { cascade: true })
-  sets!: Set[];
-
   @Column({ nullable: true })
   stage!: string;
+
+  @Column({ nullable: true })                                                                                   
+  court!: number; // Nowe pole dla boiska                                                                       
+                                                                                                                
+  @Column({ type: 'timestamp', nullable: true })                                                                
+  scheduledTime!: Date; // Nowe pole dla czasu meczu
+
+  @OneToMany(() => Set, (set) => set.match, { cascade: true })
+  sets!: Set[];
 }

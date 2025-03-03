@@ -29,6 +29,8 @@ export class TournamentService {
         numSeededTeams: tournamentData.numSeededTeams ? Number(tournamentData.numSeededTeams) : undefined, // ⬅️ Use `undefined` instead of `null`
         lunchBreakDuration: tournamentData.lunchBreakDuration ? Number(tournamentData.lunchBreakDuration) : undefined,
         tieBreakFormat: tournamentData.tieBreakFormat ? Number(tournamentData.tieBreakFormat) : undefined,
+        matchDuration: tournamentData.matchDuration ? Number(tournamentData.matchDuration) : 0, // Nowe pole      
+        tournamentDescription: tournamentData.tournamentDescription ?? '', // Nowe pole  
       };
 
       console.log('Sanitized Tournament Data:', sanitizedData); // Debugging

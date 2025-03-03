@@ -89,27 +89,34 @@ export default function TournamentWizard() {
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg">
       <h2 className="text-2xl font-bold mb-6">Stwórz Turniej</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         <fieldset>
-          <legend className="text-lg font-semibold mb-2">Informacje ogólne</legend>
+          <legend className="text-lg font-semibold mb-4">Informacje ogólne</legend>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Miejsce turnieju</label>
-            <input className="w-full p-3 border border-gray-300 rounded-md" name="location" type="text" onChange={handleChange} required />
+            <label className="block text-gray-700 font-medium mb-2">Miejsce turnieju</label>
+            <input className="w-full p-3 border border-gray-300 rounded-md mb-2" name="location" type="text"
+              onChange={handleChange} required />
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Opis turnieju</label>
-            <textarea className="w-full p-3 border border-gray-300 rounded-md" name="tournamentDescription" type="text" onChange={handleChange} required />
+            <label className="block text-gray-700 font-medium mb-2">Godzina rozpoczęcia</label>
+            <input className="w-full p-3 border border-gray-300 rounded-md mb-2" name="startTime" type="datetime-local" onChange={handleChange} required />
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Rodzaj turnieju</label>
-            <select className="w-full p-3 border border-gray-300 rounded-md" name="type" value={formData.type} onChange={handleChange}>
+            <label className="block text-gray-700 font-medium mb-2">Opis turnieju</label>
+            <textarea className="w-full p-3 border border-gray-300 rounded-md mb-2" name="tournamentDescription"
+              onChange={handleChange} required rows={6} />
+          </div>
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">Rodzaj turnieju</label>
+            <select className="w-full p-3 border border-gray-300 rounded-md mb-2" name="type" value={formData.type}
+              onChange={handleChange}>
               <option value="brazilian">Brazylijski</option>
               <option value="play-off">Play off</option>
             </select>
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Liczba drużyn</label>
-            <select className="w-full p-3 border border-gray-300 rounded-md" name="numTeams" type="number" onChange={handleChange} required>
+            <label className="block text-gray-700 font-medium mb-2">Liczba drużyn</label>
+            <select className="w-full p-3 border border-gray-300 rounded-md mb-2" name="numTeams" type="number" onChange={handleChange} required>
               <option value="8">8</option>
               <option value="12">12</option>
               <option value="16">16</option>
@@ -118,18 +125,14 @@ export default function TournamentWizard() {
             </select>
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Liczba boisk</label>
-            <input className="w-full p-3 border border-gray-300 rounded-md" name="numCourts" type="number" onChange={handleChange} required />
+            <label className="block text-gray-700 font-medium mb-2">Liczba boisk</label>
+            <input className="w-full p-3 border border-gray-300 rounded-md mb-4 mb-2" name="numCourts" type="number" onChange={handleChange} required />
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Godzina rozpoczęcia</label>
-            <input className="w-full p-3 border border-gray-300 rounded-md" name="startTime" type="time" onChange={handleChange} required />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Długość meczu</label>
-            <select className="w-full p-3 border border-gray-300 rounded-md"
+            <label className="block text-gray-700 font-medium mb-2">Długość meczu</label>
+            <select className="w-full p-3 border border-gray-300 rounded-md mb-2"
               name="matchDuration"
-              value={formData.breakDuration}
+              value={formData.matchDuration}
               onChange={handleChange}
               required
             >
@@ -142,8 +145,8 @@ export default function TournamentWizard() {
             </select>
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1">Przerwa między meczami</label>
-            <select className="w-full p-3 border border-gray-300 rounded-md"
+            <label className="block text-gray-700 font-medium mb-2">Przerwa między meczami</label>
+            <select className="w-full p-3 border border-gray-300 rounded-md mb-2"
               name="breakDuration"
               value={formData.breakDuration}
               onChange={handleChange}

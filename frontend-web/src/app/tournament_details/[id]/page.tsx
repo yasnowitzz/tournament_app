@@ -23,6 +23,8 @@ const TournamentDetails = () => {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [activeTab, setActiveTab] = useState("matches"); // Domyślnie pierwsza zakładka
   const [results, setResults] = useState({});
+  const [showFull, setShowFull] = useState(false);
+  const toggleShow = () => setShowFull(!showFull);
 
   useEffect(() => {
     if (!isNaN(tournamentId)) {
@@ -120,22 +122,34 @@ const TournamentDetails = () => {
 
   if (!tournament) return <p className="text-gray-700">Ładowanie szczegółów turnieju...</p>;
 
+  const description = tournament.tournamentDescription;
+  const shortDescription = description.length > 200 ? description.substring(0, 200) + '...' : description;
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mt-4">
-        <h1 className="text-3xl font-bold">Szczegóły Turnieju #{tournament.id}</h1>
+        <h1 className="text-3xl font-bold mb-4">Szczegóły Turnieju #{tournament.id}</h1>
         {user?.role === "player" && (
-        <button
-          onClick={openSignupModal}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition">
-          Zapisz się do turnieju
-        </button>
-      )}
+          <button
+            onClick={openSignupModal}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition">
+            Zapisz się do turnieju
+          </button>
+        )}
       </div>
-      <p className="text-gray-700 mt-2">Liczba drużyn: {tournament.numTeams}</p>
-      <p className="text-gray-700">Liczba boisk: {tournament.numCourts}</p>
-      <p className="text-gray-700">Czas startu: {tournament.startTime}</p>
-      <p className="text-gray-700">Lokalizacja: {tournament.location}</p>
+      <div className="mb-6 p-4 rounded-md" >
+        <h2 className="text-xl font-semibold mb-2">Opis Turnieju</h2>
+        <p className="text-gray-700">
+          {showFull ? description : shortDescription}
+          {description.length > 200 && (
+            <span
+              onClick={toggleShow}
+              className="text-blue-500 hover:underline cursor-pointer ml-2"
+            >
+              {showFull ? 'Ukryj' : 'Czytaj więcej'}
+            </span>
+          )}
+        </p>
+      </div>
       {/* Nawigacja zakładek */}
       <div className="mt-6 flex border-b-2">
         {[
@@ -177,6 +191,9 @@ const TournamentDetails = () => {
                       <table className="min-w-full divide-y divide-gray-300">
                         <thead className="bg-gray-50 sticky top-0 z-10">
                           <tr>
+                            <th className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900 w-20">
+                              Godzina
+                            </th>
                             <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 w-56">
                               Drużyny
                             </th>
@@ -206,9 +223,12 @@ const TournamentDetails = () => {
                             return (
                               <tr
                                 key={match.id}
-                                onClick={user?.role === "admin" ? () => openMatchModal(match) : undefined}                                               
+                                onClick={user?.role === "admin" ? () => openMatchModal(match) : undefined}
                                 className={`hover:bg-gray-50 ${user?.role === "admin" ? "cursor-pointer" : "cursor-not-allowed"}`}
                               >
+                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center w-20">
+                                  {match.scheduledTime || "N/A"}
+                                </td>
                                 <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6 w-56">
                                   <div className={`truncate ${winner === "team1" ? "font-bold text-blue-600" : ""}`}> {/* ⬅ ZMIANA */}
                                     {match.team1 ? `${match.team1.player1?.lastName} & ${match.team1.player2?.lastName}` : "TBD"}
