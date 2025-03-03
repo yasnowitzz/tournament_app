@@ -119,6 +119,10 @@ const TournamentDetails = () => {
     if (team2SetsWon > team1SetsWon) return "team2";
     return null; // Remis lub brak wyniku
   };
+  const formatTime = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   if (!tournament) return <p className="text-gray-700">Ładowanie szczegółów turnieju...</p>;
 
@@ -227,7 +231,7 @@ const TournamentDetails = () => {
                                 className={`hover:bg-gray-50 ${user?.role === "admin" ? "cursor-pointer" : "cursor-not-allowed"}`}
                               >
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center w-20">
-                                  {match.scheduledTime || "N/A"}
+                                  {match.scheduledTime ? formatTime(match.scheduledTime) : "N/A"}
                                 </td>
                                 <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6 w-56">
                                   <div className={`truncate ${winner === "team1" ? "font-bold text-blue-600" : ""}`}> {/* ⬅ ZMIANA */}
