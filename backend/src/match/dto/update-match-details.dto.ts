@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsDateString } from 'class-validator';
+import { IsOptional, IsString, IsDateString, IsNumber } from 'class-validator';
 
 export class UpdateMatchDetailsDto {
     @IsOptional()
@@ -6,6 +6,6 @@ export class UpdateMatchDetailsDto {
     scheduledTime?: string;
 
     @IsOptional()
-    @IsString()
+    @IsNumber()
     court?: number;
 }                                                                                                               

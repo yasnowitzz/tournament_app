@@ -16,22 +16,29 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
   const [showDropdown2, setShowDropdown2] = useState(false);
   const [hasAssignedTeams, setHasAssignedTeams] = useState(false);
   const [availableTeams, setAvailableTeams] = useState([]);
-  const [scheduledTime, setScheduledTime] = useState(match?.scheduledTime || "");
-  const [court, setCourt] = useState(match?.court || "");
   const matchId = match?.id;
   const router = useRouter();
   const dropdown1Ref = useRef(null);
   const dropdown2Ref = useRef(null);
-  const [matchResult, setMatchResult] = useState("");
   const [activeTab, setActiveTab] = useState("teams"); // Dodana zakładka
-  const [setScore, setSetScore] = useState({ team1: 0, team2: 0 });
   const [setDetails, setSetDetails] = useState([
     { team1: 0, team2: 0 },
     { team1: 0, team2: 0 },
     { team1: 0, team2: 0 },
   ]);
+  const [scheduledTime, setScheduledTime] = useState("");
+  const [court, setCourt] = useState<number | undefined>(undefined);
 
-
+  useEffect(() => {                                                                                               
+    if (match) {                                                                                                  
+      setScheduledTime(                                                                                           
+        match.scheduledTime                                                                                       
+          ? toLocalDatetimeString(match.scheduledTime)                                                            
+          : ""                                                                                                    
+      );                                                                                                          
+      setCourt(match.court !== undefined && match.court !== null ? match.court : undefined);                      
+    }                                                                                                             
+  }, [match]);
 
   useEffect(() => {
     fetcher(`/teams/tournament/${tournamentId}`)
@@ -201,26 +208,6 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown1, showDropdown2]);
 
-  useEffect(() => {
-    if (match) {
-      setMatchResult(match.result || ""); // Pobranie istniejącego wyniku meczu
-    }
-  }, [match]);
-
-  useEffect(() => {
-    if (match && match.result) {
-      const resultParts = match.result.split(" ");
-      const scores = resultParts[0].split(":").map(Number);
-      setSetScore({ team1: scores[0], team2: scores[1] });
-
-      const details = resultParts[1]?.match(/\(([^)]+)\)/)?.[1]
-        .split(", ")
-        .map(set => set.split(":").map(Number)) || [[0, 0], [0, 0], [0, 0]];
-
-      setSetDetails(details.map(([team1, team2]) => ({ team1, team2 })));
-    }
-  }, [match]);
-
   const handleSaveResult = async () => {
     const formattedSetResults = setDetails.map(set => ({
       team1_score: set.team1,
@@ -240,33 +227,43 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
       toast.error("Błąd zapisu wyniku meczu:" + error.message);
     }
   };
-
-  const handleSaveDetails = async () => {                                                                         
+  const handleSaveDetails = async () => {
     // Walidacja danych przed wysłaniem                                                                           
-    if (!scheduledTime || !court) {                                                                               
-      toast.error("Proszę wprowadzić zarówno godzinę, jak i boisko.");                                            
-      return;                                                                                                     
-    }                                                                                                             
-                                                                                                                  
-    try {                                                                                                         
-      await fetcher(`/matches/update-details/${matchId}`, {                                                       
-        method: "PATCH",                                                                                          
-        body: JSON.stringify({                                                                                    
-          scheduledTime,                                                                                          
-          court,                                                                                                  
-        }),                                                                                                       
-        headers: {                                                                                                
-          "Content-Type": "application/json",                                                                     
+    if (!scheduledTime || !court) {
+      toast.error("Proszę wprowadzić zarówno godzinę, jak i boisko.");
+      return;
+    }
+
+    try {
+      await fetcher(`/matches/update-details/${match.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          scheduledTime: new Date(scheduledTime).toISOString(), // Konwersja do ISO 8601                             
+          court,
+        }),
+        headers: {
+          "Content-Type": "application/json",
           // Dodatkowe nagłówki, jeśli potrzebne (np. Authorization)                                              
-        },                                                                                                        
-      });                                                                                                         
-                                                                                                                  
-      toast.success("Szczegóły meczu zostały zaktualizowane.");                                                   
+        },
+      });
+
+      toast.success("Szczegóły meczu zostały zaktualizowane.");
       onClose(); // Zamknij modal                                                                                 
       router.refresh(); // Odśwież stronę                                                                         
-    } catch (error) {                                                                                             
-      toast.error("Błąd zapisu szczegółów meczu: " + error.message);                                              
-    }                                                                                                             
+    } catch (error) {
+      toast.error("Błąd zapisu szczegółów meczu: " + error.message);
+    }
+  };
+
+  const toLocalDatetimeString = (date: string | Date): string => {                                                
+    const d = new Date(date);                                                                                     
+    const pad = (num: number) => num.toString().padStart(2, '0');                                                 
+    const year = d.getFullYear();                                                                                 
+    const month = pad(d.getMonth() + 1);                                                                          
+    const day = pad(d.getDate());                                                                                 
+    const hours = pad(d.getHours());                                                                              
+    const minutes = pad(d.getMinutes());                                                                          
+    return `${year}-${month}-${day}T${hours}:${minutes}`;                                                         
   }; 
 
   return (
@@ -291,9 +288,9 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
       {activeTab === "details" && (
         <div className="mt-4 space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700">Godzina</label>
+            <label className="block text-sm font-semibold text-gray-700">Data i godzina</label>
             <input
-              type="time"
+              type="datetime-local"
               value={scheduledTime}
               onChange={(e) => setScheduledTime(e.target.value)}
               className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
@@ -303,8 +300,8 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
             <label className="block text-sm font-semibold text-gray-700">Boisko</label>
             <input
               type="number"
-              value={court}
-              onChange={(e) => setCourt(e.target.value)}
+              value={court ?? ""}
+              onChange={(e) => setCourt(e.target.value === "" ? undefined : Number(e.target.value))}
               className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
             />
           </div>

@@ -93,32 +93,8 @@ const TournamentDetails = () => {
     }, {});
   };
 
-  const handleResultChange = (matchId, team, value) => {
-    setResults((prev) => ({
-      ...prev,
-      [matchId]: {
-        ...prev[matchId],
-        [team]: value,
-      },
-    }));
-  };
-
-  const handleSaveResult = (match) => {
-    if (results[match.id]?.team1 !== undefined && results[match.id]?.team2 !== undefined) {
-      updateMatchResult(match.id, results[match.id].team1, results[match.id].team2);
-    }
-  };
-
   const groupedMatches = groupAndSortMatches(matches);
 
-  const getWinner = () => {
-    const team1SetsWon = setDetails.filter(set => set.team1 > set.team2).length;
-    const team2SetsWon = setDetails.filter(set => set.team2 > set.team1).length;
-
-    if (team1SetsWon > team2SetsWon) return "team1";
-    if (team2SetsWon > team1SetsWon) return "team2";
-    return null; // Remis lub brak wyniku
-  };
   const formatTime = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

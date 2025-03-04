@@ -43,7 +43,7 @@ export class MatchService {
   private createMatch(
     tournament: Tournament,
     matchData: { match_id: number; next_match_win?: number; next_match_lose?: number, stage: string },
-    court: number,                                                                                              
+    court: number,
     scheduledTime: Date,
   ): Match {
     const match = new Match();
@@ -52,7 +52,7 @@ export class MatchService {
     match.next_match_win = matchData.next_match_win ?? 0;
     match.next_match_lose = matchData.next_match_lose ?? 0;
     match.stage = matchData.stage;
-    match.court = court;                                                                                        
+    match.court = court;
     match.scheduledTime = scheduledTime;
     return match;
   }
@@ -61,56 +61,56 @@ export class MatchService {
     return this.matchRepository.findOne({ where: { id } });
   }
 
-  async createMatchesFromSchema(tournamentId: number, numTeams: number) {                                       
-    const tournament = await this.tournamentRepository.findOne({                                                
-      where: { id: tournamentId },                                                                              
-    });                                                                                                         
-                                                                                                                
-    if (!tournament) {                                                                                          
-      throw new BadRequestException('Tournament not found');                                                    
-    }                                                                                                           
-                                                                                                                
-    const schema = this.loadMatchSchema();                                                                      
-    const matchesData = schema[numTeams].rounds;                                                                
-                                                                                                                
-    const numCourts = tournament.numCourts;                                                                     
+  async createMatchesFromSchema(tournamentId: number, numTeams: number) {
+    const tournament = await this.tournamentRepository.findOne({
+      where: { id: tournamentId },
+    });
+
+    if (!tournament) {
+      throw new BadRequestException('Tournament not found');
+    }
+
+    const schema = this.loadMatchSchema();
+    const matchesData = schema[numTeams].rounds;
+
+    const numCourts = tournament.numCourts;
     const matchDuration = parseInt(tournament.matchDuration.toString(), 10); // Załóżmy, że matchDuration jest minutach                                                                                                        
-    const breakDuration = parseInt(tournament.breakDuration.toString(), 10);                                    
+    const breakDuration = parseInt(tournament.breakDuration.toString(), 10);
     const startTime = new Date(tournament.startTime); // Załóżmy, że startTime jest przechowywany jako Date     
-                                                                                                                
+
     // Inicjalizacja harmonogramu dla każdego boiska                                                            
-    const courtSchedules: Date[] = Array(numCourts).fill(startTime);                                            
-                                                                                                                
-    const matches: Match[] = [];                                                                                
-                                                                                                                
-    matchesData.forEach((matchData: any) => {                                                                   
+    const courtSchedules: Date[] = Array(numCourts).fill(startTime);
+
+    const matches: Match[] = [];
+
+    matchesData.forEach((matchData: any) => {
       // Znajdowanie boiska z najwcześniejszym dostępnym czasem                                                 
-      let earliestCourtIndex = 0;                                                                               
-      let earliestTime = courtSchedules[0];                                                                     
-                                                                                                                
-      for (let i = 1; i < courtSchedules.length; i++) {                                                         
-        if (courtSchedules[i] < earliestTime) {                                                                 
-          earliestTime = courtSchedules[i];                                                                     
-          earliestCourtIndex = i;                                                                               
-        }                                                                                                       
-      }                                                                                                         
-                                                                                                                
+      let earliestCourtIndex = 0;
+      let earliestTime = courtSchedules[0];
+
+      for (let i = 1; i < courtSchedules.length; i++) {
+        if (courtSchedules[i] < earliestTime) {
+          earliestTime = courtSchedules[i];
+          earliestCourtIndex = i;
+        }
+      }
+
       // Przypisanie boiska i czasu                                                                             
-      const scheduledTime = new Date(courtSchedules[earliestCourtIndex]);                                       
+      const scheduledTime = new Date(courtSchedules[earliestCourtIndex]);
       const court = earliestCourtIndex + 1; // Boiska numerowane od 1                                           
-                                                                                                                
+
       // Aktualizacja harmonogramu boiska                                                                       
-      courtSchedules[earliestCourtIndex] = new Date(scheduledTime.getTime() + (matchDuration + breakDuration) * 
-60000);                                                                                                         
-                                                                                                                
+      courtSchedules[earliestCourtIndex] = new Date(scheduledTime.getTime() + (matchDuration + breakDuration) *
+        60000);
+
       // Tworzenie meczu                                                                                        
-      const match = this.createMatch(tournament, matchData, court, scheduledTime);                              
-      matches.push(match);                                                                                      
-    });                                                                                                         
-                                                                                                                
-    await this.matchRepository.save(matches);                                                                   
-    return matches;                                                                                             
-  }  
+      const match = this.createMatch(tournament, matchData, court, scheduledTime);
+      matches.push(match);
+    });
+
+    await this.matchRepository.save(matches);
+    return matches;
+  }
 
   async assignTeamsToMatches(tournamentId: number, teams: { [key: number]: { team1: number, team2: number } }) {
     const matches = await this.matchRepository.find({
@@ -266,13 +266,13 @@ export class MatchService {
     if (!match) {
       throw new BadRequestException('Match not found');
     }
-    console.log(`Match to be updated` , match);
+    console.log(`Match to be updated`, match);
     const losingTeamId = match.team1?.id === winningTeamId ? match.team2?.id : match.team1?.id;
 
     console.log(`Winning team: ${winningTeamId}, Losing team: ${losingTeamId}`);
     // 🛑 Usuwamy stare przypisania z następnych meczów, jeśli zmienił się zwycięzca
-    await this.clearNextMatchAssignment(match.next_match_win, losingTeamId, match.tournament.id );
-    await this.clearNextMatchAssignment(match.next_match_lose, winningTeamId, match.tournament.id );
+    await this.clearNextMatchAssignment(match.next_match_win, losingTeamId, match.tournament.id);
+    await this.clearNextMatchAssignment(match.next_match_lose, winningTeamId, match.tournament.id);
 
     // 📌 Obsługa meczu dla zwycięzcy
     if (match.next_match_win) {
@@ -377,39 +377,41 @@ export class MatchService {
       .getMany();
   }
 
-  async getMatchResult(matchId: number): Promise<Match> {                                                            
-    const match = await this.matchRepository.findOne({                                                               
-      where: { id: matchId },                                                                                        
+  async getMatchResult(matchId: number): Promise<Match> {
+    const match = await this.matchRepository.findOne({
+      where: { id: matchId },
       relations: ['team1', 'team2', 'sets'], // Załaduj powiązane encje jeśli są potrzebne                           
-    });                                                                                                              
-                                                                                                                     
-    if (!match) {                                                                                                    
-      throw new NotFoundException(`Mecz o ID ${matchId} nie został znaleziony.`);                                    
-    }                                                                                                                
-                                                                                                                     
-    return match;                                                                                                    
+    });
+
+    if (!match) {
+      throw new NotFoundException(`Mecz o ID ${matchId} nie został znaleziony.`);
+    }
+
+    return match;
   }
 
-  async updateMatchDetails(matchId: number, updateMatchDetailsDto: UpdateMatchDetailsDto): Promise<Match> {     
-    const match = await this.matchRepository.findOne({ where: { id: matchId } });                               
-                                                                                                                
-    if (!match) {                                                                                               
-      throw new NotFoundException(`Match with ID ${matchId} not found`);                                        
-    }                                                                                                           
-                                                                                                                
-    const { scheduledTime, court } = updateMatchDetailsDto;                                                     
-                                                                                                                
-    if (scheduledTime) {                                                                                        
-      const parsedDate = new Date(scheduledTime);                                                               
-      if (isNaN(parsedDate.getTime())) {                                                                        
-        throw new BadRequestException('Invalid date format for scheduledTime');                                 
-      }                                                                                                         
-      match.scheduledTime = parsedDate;                                                                                                           
-                                                                                                                
-    if (court) {                                                                                                
-      match.court = court;                                                                                      
-    }                                                                                                           
-                                                                                                                
-    return this.matchRepository.save(match);                                                                    
+  async updateMatchDetails(matchId: number, updateMatchDetailsDto: UpdateMatchDetailsDto): Promise<Match> {
+    const match = await this.matchRepository.findOne({ where: { id: matchId } });
+
+    if (!match) {
+      throw new NotFoundException(`Match with ID ${matchId} not found`);
+    }
+
+    const { scheduledTime, court } = updateMatchDetailsDto;
+
+    // Sprawdzenie, czy oba pola są dostarczone                                                                 
+    if (!scheduledTime || court === undefined || court === null) {
+      throw new BadRequestException('Both scheduledTime and court are required');
+    }
+
+    const parsedDate = new Date(scheduledTime);
+    if (isNaN(parsedDate.getTime())) {
+      throw new BadRequestException('Invalid date format for scheduledTime');
+    }
+
+    match.scheduledTime = parsedDate;
+    match.court = Number(court); // Upewnij się, że court jest liczbą                                           
+
+    return this.matchRepository.save(match);
   }
 }
