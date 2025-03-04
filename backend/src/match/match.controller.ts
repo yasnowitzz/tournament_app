@@ -1,9 +1,10 @@
-import { Controller, Post, Body, Param, Get, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Delete, UseGuards, Patch } from '@nestjs/common';
 import { MatchService } from './match.service';
 import { Match } from './match.entity';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { UpdateMatchDetailsDto } from './dto/update-match-details.dto';
 
 
 @Controller('matches')
@@ -67,4 +68,13 @@ export class MatchController {
     return this.matchService.getMatchResult(matchId);                                                               
   }  
 
+  @Patch('update-details/:matchId')                                                                             
+  @Roles('admin')                                                                                               
+  @UseGuards(JwtAuthGuard, RolesGuard)                                                                          
+  async updateMatchDetails(                                                                                     
+    @Param('matchId') matchId: number,                                                                          
+    @Body() updateMatchDetailsDto: UpdateMatchDetailsDto,                                                       
+  ): Promise<Match> {                                                                                           
+    return this.matchService.updateMatchDetails(matchId, updateMatchDetailsDto);                                
+  }
 }

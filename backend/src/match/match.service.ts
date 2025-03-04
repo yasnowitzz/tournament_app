@@ -7,6 +7,7 @@ import { Team } from '../team/team.entity';
 import { SetService } from '../set/set.service';
 import { Set } from '../set/set.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { UpdateMatchDetailsDto } from './dto/update-match-details.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -387,5 +388,28 @@ export class MatchService {
     }                                                                                                                
                                                                                                                      
     return match;                                                                                                    
-  } 
+  }
+
+  async updateMatchDetails(matchId: number, updateMatchDetailsDto: UpdateMatchDetailsDto): Promise<Match> {     
+    const match = await this.matchRepository.findOne({ where: { id: matchId } });                               
+                                                                                                                
+    if (!match) {                                                                                               
+      throw new NotFoundException(`Match with ID ${matchId} not found`);                                        
+    }                                                                                                           
+                                                                                                                
+    const { scheduledTime, court } = updateMatchDetailsDto;                                                     
+                                                                                                                
+    if (scheduledTime) {                                                                                        
+      const parsedDate = new Date(scheduledTime);                                                               
+      if (isNaN(parsedDate.getTime())) {                                                                        
+        throw new BadRequestException('Invalid date format for scheduledTime');                                 
+      }                                                                                                         
+      match.scheduledTime = parsedDate;                                                                                                           
+                                                                                                                
+    if (court) {                                                                                                
+      match.court = court;                                                                                      
+    }                                                                                                           
+                                                                                                                
+    return this.matchRepository.save(match);                                                                    
+  }
 }

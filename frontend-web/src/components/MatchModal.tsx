@@ -16,6 +16,8 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
   const [showDropdown2, setShowDropdown2] = useState(false);
   const [hasAssignedTeams, setHasAssignedTeams] = useState(false);
   const [availableTeams, setAvailableTeams] = useState([]);
+  const [scheduledTime, setScheduledTime] = useState(match?.scheduledTime || "");
+  const [court, setCourt] = useState(match?.court || "");
   const matchId = match?.id;
   const router = useRouter();
   const dropdown1Ref = useRef(null);
@@ -239,6 +241,34 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
     }
   };
 
+  const handleSaveDetails = async () => {                                                                         
+    // Walidacja danych przed wysłaniem                                                                           
+    if (!scheduledTime || !court) {                                                                               
+      toast.error("Proszę wprowadzić zarówno godzinę, jak i boisko.");                                            
+      return;                                                                                                     
+    }                                                                                                             
+                                                                                                                  
+    try {                                                                                                         
+      await fetcher(`/matches/update-details/${matchId}`, {                                                       
+        method: "PATCH",                                                                                          
+        body: JSON.stringify({                                                                                    
+          scheduledTime,                                                                                          
+          court,                                                                                                  
+        }),                                                                                                       
+        headers: {                                                                                                
+          "Content-Type": "application/json",                                                                     
+          // Dodatkowe nagłówki, jeśli potrzebne (np. Authorization)                                              
+        },                                                                                                        
+      });                                                                                                         
+                                                                                                                  
+      toast.success("Szczegóły meczu zostały zaktualizowane.");                                                   
+      onClose(); // Zamknij modal                                                                                 
+      router.refresh(); // Odśwież stronę                                                                         
+    } catch (error) {                                                                                             
+      toast.error("Błąd zapisu szczegółów meczu: " + error.message);                                              
+    }                                                                                                             
+  }; 
+
   return (
     <CommonModal open={open} onClose={onClose} title={match ? `Mecz #${match.id}` : "Edytuj mecz"}>
       {/* Zakładki */}
@@ -246,6 +276,7 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
         {[
           { id: "teams", label: "Drużyny" },
           { id: "result", label: "Wynik meczu" },
+          { id: "details", label: "Szczegóły meczu" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -257,6 +288,28 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
           </button>
         ))}
       </div>
+      {activeTab === "details" && (
+        <div className="mt-4 space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">Godzina</label>
+            <input
+              type="time"
+              value={scheduledTime}
+              onChange={(e) => setScheduledTime(e.target.value)}
+              className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">Boisko</label>
+            <input
+              type="number"
+              value={court}
+              onChange={(e) => setCourt(e.target.value)}
+              className="w-full p-2 border rounded-md focus:ring focus:ring-blue-300"
+            />
+          </div>
+        </div>
+      )}
       {activeTab === "teams" && (
         <div className="mt-4 space-y-4 relative">
           <div className="relative">
@@ -374,6 +427,15 @@ const MatchModal = ({ open, onClose = () => { }, match, tournamentId }) => {
           <button
             type="button"
             onClick={handleSaveResult}
+            className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-500"
+          >
+            Zapisz
+          </button>
+        )}
+        {activeTab === "details" && (
+          <button
+            type="button"
+            onClick={handleSaveDetails}
             className="px-4 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-500"
           >
             Zapisz
